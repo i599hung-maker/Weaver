@@ -81,7 +81,6 @@ export default function Chart({ astrolabe: a, meta, name, birthYear, horoscope, 
       })}
 
       <div className="center" style={{ gridRow: '2 / 4', gridColumn: '2 / 4' }}>
-        <h2>占驗紫微排盤</h2>
         <div className="center-grid">
           <span className="k">姓名</span>
           <span>{name || '—'}</span>

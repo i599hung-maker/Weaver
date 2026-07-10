@@ -1,3 +1,5 @@
+import { useRef, type ReactNode } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type FunctionalAstrolabe from 'iztro/lib/astro/FunctionalAstrolabe';
 import { STEMS, BRANCHES, branchIndex, stemIndex, mod12 } from '../engine/types';
 
@@ -19,6 +21,28 @@ function ganzhiOfYear(year: number, birthYear: number, yearStem: string, yearBra
   return `${stem}${branch}`;
 }
 
+/** 單行可滑動的選項列：標籤＋左右箭頭＋橫向捲動軌道 */
+function ScrollRow({ label, children }: { label: string; children: ReactNode }) {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const scroll = (dir: -1 | 1) => {
+    trackRef.current?.scrollBy({ left: dir * 240, behavior: 'smooth' });
+  };
+  return (
+    <div className="bar-row">
+      <span className="bar-label">{label}</span>
+      <button className="bar-arrow" title="往左" onClick={() => scroll(-1)}>
+        <ChevronLeft size={15} strokeWidth={1.8} />
+      </button>
+      <div className="bar-track" ref={trackRef}>
+        {children}
+      </div>
+      <button className="bar-arrow" title="往右" onClick={() => scroll(1)}>
+        <ChevronRight size={15} strokeWidth={1.8} />
+      </button>
+    </div>
+  );
+}
+
 export default function HoroscopeBar({
   astrolabe,
   birthYear,
@@ -34,8 +58,7 @@ export default function HoroscopeBar({
 
   return (
     <div className="horo-bar">
-      <div className="bar-row">
-        <span className="bar-label">大限</span>
+      <ScrollRow label="大限">
         <button className={selDecadalBranch === null ? 'active' : ''} onClick={() => onSelectDecadal(null)}>
           本命
         </button>
@@ -52,10 +75,9 @@ export default function HoroscopeBar({
             </small>
           </button>
         ))}
-      </div>
+      </ScrollRow>
       {selPalace && (
-        <div className="bar-row">
-          <span className="bar-label">流年</span>
+        <ScrollRow label="流年">
           <button className={selYear === null ? 'active' : ''} onClick={() => onSelectYear(null)}>
             不選
           </button>
@@ -72,7 +94,7 @@ export default function HoroscopeBar({
               </button>
             );
           })}
-        </div>
+        </ScrollRow>
       )}
     </div>
   );

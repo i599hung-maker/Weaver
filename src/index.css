@@ -4,12 +4,22 @@
 
 :root {
   color-scheme: dark;
-  --bg: #101418;
-  --panel: #171d24;
-  --border: #2a3340;
-  --text: #dbe2ea;
-  --dim: #8b98a8;
-  --gold: #e8b93e;
+
+  /* ── 主題 token（黑白極簡） ── */
+  --bg: #131314;
+  --bg-sidebar: #161618;
+  --bg-panel: #1c1c1f;
+  --bg-hover: #232327;
+  --bg-active: #2a2a2e;
+  --border: #2b2b2f;
+  --text: #ececec;
+  --text-2: #9b9ba1;
+  --text-3: #6c6c72;
+  --primary: #ececec;
+  --primary-fg: #131314;
+  --radius: 12px;
+
+  /* ── 盤面資訊色（星曜／凶吉／流曜），非 UI 裝飾 ── */
   --major: #8ab4ff;
   --lucky: #6fd3a3;
   --malefic: #ff8a80;
@@ -27,26 +37,40 @@ body {
   font-size: 14px;
 }
 
+/* 次要按鈕預設樣式：透明底＋細邊框 */
 button {
   font-family: inherit;
   cursor: pointer;
-  background: var(--panel);
+  background: transparent;
   color: var(--text);
   border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 4px 8px;
+  border-radius: var(--radius);
+  padding: 4px 10px;
 }
 
 button:hover {
-  border-color: var(--gold);
+  background: var(--bg-hover);
+}
+
+button:focus-visible {
+  outline: 1px solid var(--text-2);
+  outline-offset: 1px;
 }
 
 input,
-select {
+select,
+textarea {
   font-family: inherit;
-  background: var(--panel);
+  background: var(--bg-panel);
   color: var(--text);
   border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 4px 8px;
+  border-radius: var(--radius);
+  padding: 4px 10px;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 1px solid var(--text-2);
+  outline-offset: -1px;
 }

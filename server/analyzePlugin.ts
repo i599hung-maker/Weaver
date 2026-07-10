@@ -11,7 +11,7 @@ function callClaudeCli(prompt: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const env = { ...process.env };
     delete env.CLAUDECODE; // 允許在 Claude Code 之外以子行程執行
-    const child = spawn('claude', ['-p', '--output-format', 'text', '--model', 'sonnet'], {
+    const child = spawn('claude', ['-p', '--output-format', 'text', '--model', 'opus'], {
       env,
       cwd: tmpdir(),
       stdio: ['pipe', 'pipe', 'pipe'],
@@ -43,7 +43,7 @@ async function callApi(prompt: string, apiKey: string): Promise<string> {
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-5',
+      model: 'claude-opus-4-8',
       max_tokens: 4000,
       messages: [{ role: 'user', content: prompt }],
     }),

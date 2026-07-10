@@ -1,57 +1,346 @@
-.app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 12px 16px 40px;
-}
-
-header {
+/* ── 版面：三欄（側欄｜對話｜盤面），全高、各自捲動 ── */
+.layout {
   display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
-  margin-bottom: 12px;
+  height: 100vh;
+  overflow: hidden;
 }
 
-header h1 {
-  font-size: 20px;
-  margin: 0;
-  color: var(--gold);
-  white-space: nowrap;
+.sidebar {
+  width: var(--sb-w, 250px);
+  flex-shrink: 0;
+  height: 100%;
+  overflow-y: auto;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  padding: 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.birth-form {
+/* 直分隔線：拖曳調整欄寬 */
+.col-resizer {
+  flex: 0 0 5px;
+  cursor: col-resize;
+  background: transparent;
+  transition: background 0.15s;
+}
+
+.col-resizer:hover,
+.col-resizer:active {
+  background: var(--bg-active);
+}
+
+/* 左下角設定鈕 */
+.sb-settings {
+  margin-top: auto;
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
+  padding: 8px 10px;
+  border: none;
+  background: transparent;
+  color: var(--text-2);
+  border-radius: var(--radius);
+  text-align: left;
 }
 
-.birth-form .adv {
-  color: var(--dim);
-  font-size: 12px;
+.sb-settings:hover {
+  background: var(--bg-active);
+  color: var(--text);
+}
+
+.sb-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 4px;
+  color: var(--text);
+}
+
+.sb-brand h1 {
+  font-size: 16px;
+  margin: 0;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.sb-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 4px 0;
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+.sb-section span {
+  flex: 1;
+}
+
+.sb-icon-btn {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--text-2);
+  padding: 5px;
+  border-radius: 8px;
+  cursor: pointer;
 }
 
-.birth-form .primary {
-  background: var(--gold);
-  color: #14181d;
+.sb-icon-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text);
+}
+
+.sb-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.sb-item {
+  position: relative;
+  padding: 8px 44px 8px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.sb-item:hover {
+  background: var(--bg-hover);
+}
+
+.sb-item.active {
+  background: var(--bg-active);
+}
+
+.sb-name {
+  font-size: 14px;
   font-weight: 700;
+}
+
+.sb-item.active .sb-name {
+  color: var(--text);
+}
+
+.sb-name-input {
+  width: 100%;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 8px;
+}
+
+.sb-del,
+.sb-edit {
+  position: absolute;
+  top: 6px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--text-3);
+  line-height: 1;
+  padding: 3px;
+  border-radius: 6px;
+}
+
+.sb-del {
+  right: 6px;
+}
+
+.sb-edit {
+  right: 28px;
+}
+
+.sb-del:hover {
+  color: var(--malefic);
+  background: none;
+}
+
+.sb-edit:hover {
+  color: var(--text);
+  background: none;
+}
+
+.sb-item:hover .sb-del,
+.sb-item:hover .sb-edit {
+  display: inline-flex;
+}
+
+.sb-empty {
+  color: var(--text-2);
+  font-size: 12px;
+  text-align: center;
+  padding: 16px 0;
+}
+
+/* active 命主底下的對話清單：一行一列、不縮排 */
+.sb-convs {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 2px 0 6px;
+}
+
+.sb-conv {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 22px 5px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--text-2);
+  cursor: pointer;
+}
+
+.sb-conv-icon {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.sb-conv span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sb-conv:hover {
+  background: var(--bg-hover);
+  color: var(--text);
+}
+
+.sb-conv.active {
+  background: var(--bg-active);
+  color: var(--text);
+}
+
+.sb-conv .sb-del {
+  top: 4px;
+  right: 4px;
+  font-size: 12px;
+}
+
+.sb-conv:hover .sb-del {
+  display: inline-flex;
+}
+
+/* icon 按鈕通用：svg 與文字對齊 */
+button > svg {
+  vertical-align: -2px;
+}
+
+.primary,
+.rc-head button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: center;
+}
+
+.send-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: none;
+  background: var(--primary);
+  color: var(--primary-fg);
+  align-self: flex-end;
+}
+
+.send-btn:hover:not(:disabled) {
+  background: #ffffff;
+}
+
+.send-btn:disabled {
+  background: var(--bg-active);
+  color: var(--text-3);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spin {
+    animation: none;
+  }
+}
+
+/* ── 中欄 ─────────────────────────── */
+.main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.main > .banner {
+  margin: 10px 16px 0;
+}
+
+.banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: #2a1b1b;
+  border: 1px solid var(--malefic);
+  color: var(--malefic);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  font-size: 13px;
+}
+
+.banner button {
+  background: none;
+  border: none;
+  color: var(--malefic);
+  font-size: 14px;
+  padding: 0 4px;
+}
+
+.primary {
+  background: var(--primary);
+  color: var(--primary-fg);
+  font-weight: 600;
   border: none;
   padding: 6px 16px;
 }
 
-.birth-form .samples button {
-  font-size: 12px;
-  color: var(--dim);
-  margin-left: 4px;
+.primary:hover {
+  background: #ffffff;
+}
+
+.primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .empty {
   padding: 80px 0;
   text-align: center;
-  color: var(--dim);
+  color: var(--text-2);
 }
 
 /* ── 盤面 ─────────────────────────── */
@@ -63,9 +352,9 @@ header h1 {
 }
 
 .palace {
-  background: var(--panel);
+  background: var(--bg-panel);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 6px 7px 4px;
   display: flex;
   flex-direction: column;
@@ -100,7 +389,7 @@ header h1 {
 
 .row-adj .star {
   font-size: 11px;
-  color: var(--dim);
+  color: var(--text-2);
 }
 
 .row-horo .star {
@@ -116,17 +405,18 @@ header h1 {
   line-height: 1.5;
 }
 
+/* 星曜資訊色（保留） */
 .star-major { color: var(--major); }
 .star-lucky { color: var(--lucky); }
 .star-malefic { color: var(--malefic); }
 .star-flower { color: var(--flower); }
-.star-adj { color: var(--dim); }
+.star-adj { color: var(--text-2); }
 .star-horo { color: var(--teal); }
 
 .bri {
   font-style: normal;
   font-size: 10px;
-  color: var(--dim);
+  color: var(--text-2);
   margin-left: 1px;
 }
 
@@ -141,6 +431,7 @@ header h1 {
   line-height: 1.4;
 }
 
+/* 四化徽章資訊色（祿權科忌＝綠藍黃紅，保留） */
 .mut-祿 { background: #2e9e5b; }
 .mut-權 { background: #3d6fd6; }
 .mut-科 { background: #b8860b; }
@@ -163,8 +454,8 @@ header h1 {
 }
 
 .badge-body {
-  color: var(--gold);
-  border: 1px solid var(--gold);
+  color: var(--text-2);
+  border: 1px solid var(--text-3);
 }
 
 .badge-dec {
@@ -179,7 +470,7 @@ header h1 {
 
 .p-ages {
   font-size: 9px;
-  color: #5f6b7a;
+  color: var(--text-3);
   display: flex;
   flex-direction: column;
   line-height: 1.4;
@@ -194,7 +485,7 @@ header h1 {
 }
 
 .god-flow {
-  color: var(--gold);
+  color: var(--text);
 }
 
 .p-bottom {
@@ -208,11 +499,11 @@ header h1 {
 
 .p-range {
   font-size: 11px;
-  color: var(--dim);
+  color: var(--text-2);
 }
 
 .p-name {
-  color: var(--gold);
+  color: var(--text);
   font-weight: 700;
   font-size: 13px;
 }
@@ -224,31 +515,29 @@ header h1 {
 
 /* ── 中宮 ─────────────────────────── */
 .center {
-  background: var(--panel);
+  background: var(--bg-panel);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 14px 18px;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.center h2 {
-  margin: 0;
-  font-size: 16px;
-  color: var(--gold);
-}
-
 .center-grid {
   display: grid;
-  grid-template-columns: auto 1fr auto 1fr;
+  grid-template-columns: auto auto; /* 一列一個資訊：標籤＋內容 */
+  justify-content: center;
   gap: 4px 10px;
   font-size: 13px;
-  align-content: start;
+  align-content: center;
+  margin: auto 0; /* 在中宮內上下置中（圖例仍貼底） */
+  text-align: left;
 }
 
 .center-grid .k {
-  color: var(--dim);
+  color: var(--text-2);
+  justify-self: end;
 }
 
 .pillars {
@@ -258,7 +547,7 @@ header h1 {
 .legend {
   margin: auto 0 0;
   font-size: 11px;
-  color: var(--dim);
+  color: var(--text-2);
   display: flex;
   align-items: center;
   gap: 4px;
@@ -277,44 +566,76 @@ header h1 {
   display: flex;
   gap: 4px;
   align-items: stretch;
-  flex-wrap: wrap;
 }
 
 .bar-label {
-  color: var(--dim);
+  color: var(--text-2);
   font-size: 12px;
   display: flex;
   align-items: center;
   width: 34px;
+  flex-shrink: 0;
 }
 
-.bar-row button {
+/* 單行橫向捲動軌道（隱藏捲軸，用箭頭或滑動切換） */
+.bar-track {
+  display: flex;
+  gap: 4px;
+  align-items: stretch;
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.bar-track::-webkit-scrollbar {
+  display: none;
+}
+
+.bar-arrow {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  padding: 0;
+  color: var(--text-2);
+}
+
+.bar-arrow:hover {
+  color: var(--text);
+  background: var(--bg-active);
+}
+
+.bar-row .bar-track button {
   display: flex;
   flex-direction: column;
   align-items: center;
   min-width: 64px;
+  flex-shrink: 0;
   padding: 3px 6px;
   font-size: 12px;
   line-height: 1.4;
 }
 
 .bar-row button small {
-  color: var(--dim);
+  color: var(--text-2);
   font-size: 10px;
 }
 
 .bar-row button.active {
-  border-color: var(--gold);
-  background: #2a2413;
+  border-color: var(--border);
+  background: var(--bg-active);
+  color: var(--text);
 }
 
 .bar-row button.active small {
-  color: var(--gold);
+  color: var(--text);
 }
 
 footer {
   margin-top: 14px;
-  color: #5f6b7a;
+  color: var(--text-3);
   font-size: 11px;
 }
 
@@ -326,18 +647,6 @@ footer {
 }
 
 /* ── 精簡盤 ─────────────────────────── */
-.mode-toggle {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 8px;
-}
-
-.mode-toggle button.active {
-  border-color: var(--gold);
-  color: var(--gold);
-  background: #2a2413;
-}
-
 .palace.simple {
   padding: 8px 9px 6px;
 }
@@ -372,7 +681,7 @@ footer {
   flex-direction: column;
   align-items: center;
   font-size: 13px;
-  color: var(--dim);
+  color: var(--text-2);
   line-height: 1.3;
 }
 
@@ -405,35 +714,37 @@ footer {
 
 /* ── 分析區 ─────────────────────────── */
 .analysis {
-  margin-top: 18px;
+  margin-top: 2px;
 }
 
-.a-tabs {
+/* 斷應期底下的主題子按鈕（本命／財運／事業／愛情） */
+.a-tabs.sub {
   display: flex;
   gap: 6px;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
-.a-tabs button {
-  padding: 6px 18px;
-  font-size: 14px;
+.a-tabs.sub button {
+  padding: 3px 14px;
+  font-size: 13px;
+  border-radius: 999px;
 }
 
-.a-tabs button.active {
-  border-color: var(--gold);
-  color: var(--gold);
-  background: #2a2413;
+.a-tabs.sub button.active {
+  border-color: var(--border);
+  color: var(--text);
+  background: var(--bg-active);
 }
 
 .a-card {
-  background: var(--panel);
+  background: var(--bg-panel);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 14px 18px;
 }
 
 .a-card h3 {
-  color: var(--gold);
+  color: var(--text);
   font-size: 15px;
   margin: 14px 0 8px;
   display: flex;
@@ -459,7 +770,7 @@ footer {
 }
 
 .a-role {
-  color: var(--dim);
+  color: var(--text-2);
   min-width: 150px;
 }
 
@@ -479,7 +790,7 @@ footer {
 }
 
 .a-note {
-  color: var(--dim);
+  color: var(--text-2);
   font-size: 11px;
   margin-left: 8px;
 }
@@ -492,7 +803,7 @@ footer {
 
 .a-year {
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 8px;
   padding: 4px 8px;
   cursor: pointer;
   display: flex;
@@ -502,7 +813,8 @@ footer {
 }
 
 .a-year:hover {
-  border-color: var(--gold);
+  border-color: var(--text-3);
+  background: var(--bg-hover);
 }
 
 .a-year b {
@@ -513,12 +825,13 @@ footer {
 }
 
 .a-year b small {
-  color: var(--dim);
+  color: var(--text-2);
   font-weight: 400;
 }
 
+/* 斷應期權重資訊色（保留，非 UI 裝飾） */
 .a-year.w3 { border-color: #8a6d1a; }
-.a-year.w4, .a-year.w5, .a-year.w6 { border-color: var(--gold); background: #241f10; }
+.a-year.w4, .a-year.w5, .a-year.w6 { border-color: #caa53d; background: #26200f; }
 
 .a-hit {
   font-size: 10px;
@@ -527,6 +840,7 @@ footer {
   width: fit-content;
 }
 
+/* 引動法命中類別資訊色（保留） */
 .hit-liuming { background: #3d6fd6; color: #fff; }
 .hit-zai { background: #d63b3b; color: #fff; }
 .hit-star { background: #6d5bd0; color: #fff; }
@@ -536,7 +850,7 @@ footer {
   font-size: 12px;
 }
 
-.a-loading { color: var(--dim); }
+.a-loading { color: var(--text-2); }
 .a-error { color: var(--malefic); }
 
 .a-text {
@@ -544,9 +858,525 @@ footer {
   font-family: inherit;
   font-size: 13.5px;
   line-height: 1.8;
-  background: #10151b;
+  background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 14px 16px;
   margin: 0;
+}
+
+/* ── 新增命主 Modal ──────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  width: min(400px, calc(100vw - 32px));
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modal-card h2 {
+  margin: 0 0 4px;
+  font-size: 17px;
+  color: var(--text);
+}
+
+.m-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.m-row input:not([type='checkbox']),
+.m-row select {
+  flex: 1;
+  min-width: 0;
+}
+
+.m-label {
+  color: var(--text-2);
+  width: 68px;
+  flex-shrink: 0;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+/* ── 中欄：命盤問答（歷史列表視圖＋對話串視圖） ── */
+.chat-col {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 18px 16px;
+}
+
+/* 中欄頂部：命主名＋生辰（點選命主後顯示） */
+.chat-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 6px 2px 12px;
+}
+
+.chat-head b {
+  font-size: 16px;
+  color: var(--text);
+}
+
+.chat-head span {
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+/* 歷史列表視圖 */
+.conv-home {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+
+.conv-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* 一行一列：icon＋標題，不加外框 */
+.conv-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 30px 9px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.conv-row:hover {
+  background: var(--bg-hover);
+}
+
+.conv-row .cr-icon {
+  flex-shrink: 0;
+  color: var(--text-2);
+}
+
+.conv-row .cr-title {
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conv-row .sb-del {
+  top: 50%;
+  transform: translateY(-50%);
+  right: 8px;
+}
+
+.conv-row:hover .sb-del {
+  display: inline-flex;
+}
+
+.conv-none {
+  color: var(--text-2);
+  text-align: center;
+  padding: 48px 0;
+  font-size: 13px;
+}
+
+/* 對話串視圖 */
+.thread {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chat-msgs {
+  flex: 1;
+  min-height: 0;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+}
+
+.msg {
+  max-width: 85%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.msg.user {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.msg.assistant {
+  align-self: flex-start;
+  align-items: flex-start;
+}
+
+.msg-bubble {
+  margin: 0;
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  font-family: inherit;
+  font-size: 13.5px;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.msg.user .msg-bubble {
+  background: var(--bg-active);
+}
+
+.msg.assistant .msg-bubble {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+}
+
+.msg-time {
+  font-size: 10px;
+  color: var(--text-3);
+}
+
+.chat-empty {
+  color: var(--text-2);
+  text-align: center;
+  padding: 28px 0;
+  font-size: 13px;
+}
+
+.chat-wait {
+  color: var(--text-2);
+  font-size: 12px;
+}
+
+.chat-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--malefic);
+  font-size: 13px;
+  margin-top: 6px;
+}
+
+/* 共用輸入框：整張圓角卡片，文字區＋按鈕列都包在裡面 */
+.ask-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 12px 14px;
+}
+
+.ask-box.big {
+  margin-bottom: 20px;
+}
+
+.ask-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.ask-row textarea {
+  flex: 1;
+  min-height: 48px;
+  resize: none;
+  font-family: inherit;
+  font-size: 13.5px;
+  background: transparent;
+  color: var(--text);
+  border: none;
+  outline: none;
+  padding: 4px 2px;
+}
+
+.ask-box.big .ask-row textarea {
+  min-height: 72px;
+}
+
+.ask-row textarea:disabled {
+  opacity: 0.6;
+}
+
+.ask-modes {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.ask-modes .send-btn {
+  margin-left: auto;
+}
+
+.pill {
+  border-radius: 999px;
+  font-size: 12px;
+  padding: 2px 12px;
+}
+
+/* 對話容量指示環：hover 顯示提示泡泡 */
+.usage-ring {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 2px;
+}
+
+.usage-ring::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  white-space: nowrap;
+  background: var(--text);
+  color: var(--bg);
+  font-size: 13px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+  z-index: 20;
+}
+
+.usage-ring:hover::after {
+  opacity: 1;
+}
+
+.pill.active {
+  border-color: var(--border);
+  color: var(--text);
+  background: var(--bg-active);
+}
+
+/* 報告訊息卡片 */
+.report-card {
+  padding: 10px 12px;
+}
+
+.rc-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.rc-title {
+  font-size: 13.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rc-head button {
+  font-size: 12px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.rc-preview {
+  margin-top: 8px;
+  font-size: 12.5px;
+}
+
+.rc-preview summary {
+  cursor: pointer;
+  color: var(--text-2);
+}
+
+.rc-preview pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 6px 0 0;
+  font-family: inherit;
+  line-height: 1.7;
+}
+
+/* ── 右欄：命書＋盤面＋分析 ───────────── */
+.right-col {
+  width: var(--rp-w, 600px);
+  flex-shrink: 0;
+  min-width: 0;
+  height: 100%;
+  border-left: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.right-panel {
+  height: 100%;
+  overflow-y: auto;
+  padding: 0 14px 40px;
+}
+
+/* 右欄置頂頁籤列：命盤｜斷應期＋右側命書鈕 */
+.rp-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 -14px 12px;
+  padding: 10px 14px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.rp-tabs > button {
+  padding: 6px 18px;
+  font-size: 14px;
+}
+
+.rp-tabs > button.active {
+  border-color: var(--border);
+  color: var(--text);
+  background: var(--bg-active);
+}
+
+.rp-tabs-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rp-tabs-right .primary {
+  padding: 6px 12px;
+  font-size: 12.5px;
+}
+
+.rc-sub {
+  font-size: 12px;
+}
+
+.rc-err {
+  color: var(--malefic);
+  font-size: 12px;
+}
+
+.rp-toggle {
+  display: none;
+}
+
+/* ── RWD：<1100px 右欄摺疊、頂部「盤面」鈕開關 ── */
+@media (max-width: 1100px) {
+  .rp-toggle {
+    display: block;
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 60;
+    background: var(--bg-panel);
+  }
+  .right-col,
+  .col-resizer.rp {
+    display: none;
+  }
+  .right-col.open {
+    display: block;
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(600px, 100vw);
+    z-index: 50;
+    border-left: 1px solid var(--border);
+  }
+  .right-col.open .right-panel {
+    padding-top: 48px; /* 讓出「盤面」鈕的位置 */
+  }
+}
+
+/* ── 手機：側欄改頂部橫向列 ───────────── */
+@media (max-width: 800px) {
+  .layout {
+    flex-direction: column;
+  }
+  .col-resizer {
+    display: none;
+  }
+  .sidebar {
+    width: 100%;
+    height: auto;
+    flex-shrink: 0;
+    flex-direction: row;
+    align-items: center;
+    overflow-x: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 10px 12px;
+  }
+  .sb-brand h1 {
+    font-size: 15px;
+  }
+  .sb-section span {
+    display: none;
+  }
+  .sb-list {
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  .sb-group {
+    flex-shrink: 0;
+  }
+  .sb-item {
+    min-width: 120px;
+  }
+  .sb-convs {
+    display: none; /* 手機側欄不展開對話清單，改用中欄歷史列表 */
+  }
+  .sb-del,
+  .sb-edit {
+    display: block;
+  }
+  .sb-settings {
+    margin-top: 0;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+  .sb-settings span {
+    display: none;
+  }
 }

@@ -1,101 +1,238 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties, type MouseEvent as ReactMouseEvent } from 'react';
 import { cast } from './engine/cast';
 import type { BirthInput } from './engine/types';
-import BirthForm from './components/BirthForm';
-import Chart from './components/Chart';
-import HoroscopeBar from './components/HoroscopeBar';
-import AnalysisPanel from './components/AnalysisPanel';
+import Sidebar from './components/Sidebar';
+import MingzhuModal from './components/MingzhuModal';
+import SettingsModal from './components/SettingsModal';
+import ChatPanel from './components/ChatPanel';
+import RightPanel from './components/RightPanel';
+import {
+  deleteMingzhu,
+  listMingzhu,
+  newId,
+  saveMingzhu,
+  type Mingzhu,
+} from './store/mingzhu';
+import { loadSettings, saveSettings, type Settings } from './store/settings';
 import './App.css';
 
+/** 欄寬（px）記憶：側欄與右欄，拖分隔線調整 */
+const WIDTHS_KEY = 'zhanyan-col-widths';
+
+function loadWidths(): { sb: number; rp: number } {
+  try {
+    const raw = localStorage.getItem(WIDTHS_KEY);
+    if (raw) return { sb: 250, rp: 600, ...(JSON.parse(raw) as object) };
+  } catch {
+    /* ignore */
+  }
+  return { sb: 250, rp: 600 };
+}
+
 export default function App() {
-  const [input, setInput] = useState<BirthInput | null>(null);
-  const [selDecadalBranch, setSelDecadalBranch] = useState<string | null>(null);
-  const [selYear, setSelYear] = useState<number | null>(null);
-  const [simple, setSimple] = useState(true);
+  const [list, setList] = useState<Mingzhu[]>([]);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [activeConvId, setActiveConvId] = useState<string | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settings, setSettings] = useState<Settings>(loadSettings);
+  const [banner, setBanner] = useState<string | null>(null);
+  const [rightOpen, setRightOpen] = useState(false); // <1100px 時右欄開關
+  const [widths, setWidths] = useState(loadWidths);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(WIDTHS_KEY, JSON.stringify(widths));
+    } catch {
+      /* ignore */
+    }
+  }, [widths]);
+
+  const changeSettings = (s: Settings) => {
+    setSettings(s);
+    saveSettings(s);
+  };
+
+  /** 拖曳直分隔線調整欄寬（sb＝側欄、rp＝右欄） */
+  const startResize = (side: 'sb' | 'rp') => (e: ReactMouseEvent) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const start = widths[side];
+    const onMove = (ev: MouseEvent) => {
+      const dx = ev.clientX - startX;
+      const raw = side === 'sb' ? start + dx : start - dx;
+      const next = side === 'sb' ? Math.min(Math.max(raw, 180), 420) : Math.min(Math.max(raw, 380), 900);
+      setWidths((w) => ({ ...w, [side]: next }));
+    };
+    const onUp = () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  };
+
+  useEffect(() => {
+    listMingzhu()
+      .then(setList)
+      .catch((e) => setBanner((e as Error).message));
+  }, []);
+
+  const mingzhu = list.find((m) => m.id === activeId) ?? null;
+  const birth = mingzhu?.birth ?? null;
 
   const result = useMemo(() => {
-    if (!input) return null;
+    if (!birth) return null;
     try {
-      return cast(input);
+      return cast(birth);
     } catch (e) {
       console.error(e);
       return null;
     }
-  }, [input]);
+  }, [birth]);
 
-  const birthYear = result ? Number(result.meta.castDate.split('-')[0]) : 0;
+  const selectMingzhu = (id: string) => {
+    setActiveId(id);
+    setActiveConvId(null); // 中欄回到歷史列表視圖
+  };
 
-  const horoscope = useMemo(() => {
-    if (!result || !selDecadalBranch) return null;
-    const palace = result.astrolabe.palaces.find((p) => p.earthlyBranch === selDecadalBranch);
-    if (!palace) return null;
-    const year = selYear ?? birthYear + palace.decadal.range[0] - 1;
-    return result.astrolabe.horoscope(`${year}-7-1 12:00`);
-  }, [result, selDecadalBranch, selYear, birthYear]);
+  const addMingzhu = async (name: string, b: BirthInput) => {
+    const m: Mingzhu = {
+      id: newId('m'),
+      name,
+      birth: b,
+      createdAt: new Date().toISOString(),
+      conversations: [],
+    };
+    try {
+      await saveMingzhu(m);
+      setList((l) => [...l, m]);
+      selectMingzhu(m.id);
+      setModalOpen(false);
+    } catch (e) {
+      setBanner((e as Error).message);
+    }
+  };
+
+  const removeMingzhu = async (id: string) => {
+    try {
+      await deleteMingzhu(id);
+      setList((l) => l.filter((m) => m.id !== id));
+      if (activeId === id) {
+        setActiveId(null);
+        setActiveConvId(null);
+      }
+    } catch (e) {
+      setBanner((e as Error).message);
+    }
+  };
+
+  const updateMingzhu = (m: Mingzhu) => {
+    setList((l) => l.map((x) => (x.id === m.id ? m : x)));
+  };
+
+  /** 命主改名：只動 name，生辰資料與 conversations（key 是 id）不受影響 */
+  const renameMingzhu = async (id: string, name: string) => {
+    const m = list.find((x) => x.id === id);
+    if (!m || m.name === name) return;
+    const next: Mingzhu = { ...m, name };
+    updateMingzhu(next);
+    try {
+      await saveMingzhu(next);
+    } catch (e) {
+      updateMingzhu(m); // 存檔失敗還原
+      setBanner((e as Error).message);
+    }
+  };
+
+  /** 側欄的對話刪除（中欄卡片刪除由 ChatPanel 自行處理） */
+  const removeConv = async (convId: string) => {
+    if (!mingzhu) return;
+    if (!window.confirm('刪除此對話？')) return;
+    const next: Mingzhu = {
+      ...mingzhu,
+      conversations: mingzhu.conversations.filter((c) => c.id !== convId),
+    };
+    updateMingzhu(next);
+    if (activeConvId === convId) setActiveConvId(null);
+    try {
+      await saveMingzhu(next);
+    } catch (e) {
+      setBanner((e as Error).message);
+    }
+  };
 
   return (
-    <div className="app">
-      <header>
-        <h1>LifePath 占驗紫微</h1>
-        <BirthForm
-          onSubmit={(i) => {
-            setInput(i);
-            setSelDecadalBranch(null);
-            setSelYear(null);
-          }}
-        />
-      </header>
+    <div
+      className="layout"
+      style={{ '--sb-w': `${widths.sb}px`, '--rp-w': `${widths.rp}px` } as CSSProperties}
+    >
+      <Sidebar
+        list={list}
+        activeId={activeId}
+        activeConvId={activeConvId}
+        onSelect={selectMingzhu}
+        onAdd={() => setModalOpen(true)}
+        onDelete={removeMingzhu}
+        onRename={(id, name) => void renameMingzhu(id, name)}
+        onSelectConv={setActiveConvId}
+        onDeleteConv={removeConv}
+        onOpenSettings={() => setSettingsOpen(true)}
+      />
+      <div className="col-resizer" onMouseDown={startResize('sb')} />
 
-      {result ? (
-        <>
-          <div className="mode-toggle">
-            <button className={simple ? 'active' : ''} onClick={() => setSimple(true)}>
-              精簡盤
-            </button>
-            <button className={!simple ? 'active' : ''} onClick={() => setSimple(false)}>
-              完整盤
-            </button>
+      <main className="main">
+        {banner && (
+          <div className="banner">
+            <span>{banner}</span>
+            <button onClick={() => setBanner(null)}>×</button>
           </div>
-          <Chart
-            astrolabe={result.astrolabe}
-            meta={result.meta}
-            name={input?.name ?? ''}
-            birthYear={birthYear}
-            horoscope={horoscope}
-            showYearly={selYear !== null}
-            selDecadalBranch={selDecadalBranch}
-            simple={simple}
-          />
-          <HoroscopeBar
-            astrolabe={result.astrolabe}
-            birthYear={birthYear}
-            yearStem={result.meta.yearStem}
-            yearBranch={result.meta.yearBranch}
-            selDecadalBranch={selDecadalBranch}
-            selYear={selYear}
-            onSelectDecadal={(b) => {
-              setSelDecadalBranch(b);
-              setSelYear(null);
-            }}
-            onSelectYear={setSelYear}
-          />
-          <AnalysisPanel
+        )}
+
+        {mingzhu && result ? (
+          <ChatPanel
+            key={mingzhu.id}
+            mingzhu={mingzhu}
             result={result}
-            inputKey={`${input?.date}-${input?.time}-${input?.gender}`}
-            onJumpToYear={(decadalBranch, year) => {
-              setSelDecadalBranch(decadalBranch);
-              setSelYear(year);
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
+            activeConvId={activeConvId}
+            onSelectConv={setActiveConvId}
+            onUpdate={updateMingzhu}
           />
-          <footer>
-            排盤規則：文墨天機安星碼 S5VoG（占驗派）｜庚干四化 陽武同相｜天馬依月支｜截空旬空占驗排法｜
-            晚子時視為次日｜閏月月中分界
-          </footer>
-        </>
-      ) : (
-        <div className="empty">輸入出生資料後排盤，或點「定盤一／二／三」載入驗證命例。</div>
-      )}
+        ) : (
+          <div className="empty">
+            尚未選擇命主。點左側「＋ 新增命主」建立，或從清單選擇後排盤、分析與問答。
+          </div>
+        )}
+      </main>
+
+      <button className="rp-toggle" onClick={() => setRightOpen((o) => !o)}>
+        盤面
+      </button>
+      <div className="col-resizer rp" onMouseDown={startResize('rp')} />
+      <div className={`right-col ${rightOpen ? 'open' : ''}`}>
+        {mingzhu && result ? (
+          <RightPanel
+            key={mingzhu.id}
+            mingzhu={mingzhu}
+            result={result}
+            simple={settings.chartMode === 'simple'}
+          />
+        ) : (
+          <div className="empty">選擇命主後顯示盤面與分析。</div>
+        )}
+      </div>
+
+      <MingzhuModal open={modalOpen} onClose={() => setModalOpen(false)} onSubmit={addMingzhu} />
+      <SettingsModal
+        open={settingsOpen}
+        settings={settings}
+        onClose={() => setSettingsOpen(false)}
+        onChange={changeSettings}
+      />
     </div>
   );
 }

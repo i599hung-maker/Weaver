@@ -72,15 +72,15 @@ export default function AnalysisPanel({ result, inputKey, onJumpToYear }: Props)
 
   return (
     <div className="analysis">
-      <div className="a-tabs">
-        {TOPICS.map((topic) => (
-          <button key={topic} className={openTopic === topic ? 'active' : ''} onClick={() => setOpenTopic(topic)}>
-            {topic}
-          </button>
-        ))}
-      </div>
-
       <div className="a-card">
+        <div className="a-tabs sub">
+          {TOPICS.map((topic) => (
+            <button key={topic} className={openTopic === topic ? 'active' : ''} onClick={() => setOpenTopic(topic)}>
+              {topic}
+            </button>
+          ))}
+        </div>
+
         <h3>
           {openTopic}（{t.palaceName}宮・{t.branch}）三方四正
         </h3>
