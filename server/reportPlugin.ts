@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Plugin } from 'vite';
@@ -223,6 +223,38 @@ function handleGetHtml(key: string, res: ServerResponse): void {
   res.end(readFileSync(htmlPath(key), 'utf8'));
 }
 
+/** 刪報告：html 與 status 檔都移除（不存在視同成功） */
+export function handleDeleteReport(key: string): void {
+  rmSync(htmlPath(key), { force: true });
+  rmSync(statusPath(key), { force: true });
+}
+
+/** Playwright 輸出：jpg＝整頁長圖、pdf＝A4 含背景。reducedMotion 讓模板進場動畫區塊直接顯示 */
+async function handleExport(key: string, raw: string, res: ServerResponse): Promise<void> {
+  if (!existsSync(htmlPath(key))) return sendJson(res, 404, { error: '找不到報告' });
+  const { format } = JSON.parse(raw || '{}') as { format?: string };
+  if (format !== 'jpg' && format !== 'pdf') return sendJson(res, 400, { error: 'format 需為 jpg 或 pdf' });
+  const { chromium } = await import('playwright');
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage({
+      reducedMotion: 'reduce',
+      viewport: { width: 960, height: 1200 },
+      deviceScaleFactor: format === 'jpg' ? 2 : 1,
+    });
+    await page.goto(`file://${htmlPath(key)}`, { waitUntil: 'networkidle' });
+    const buf =
+      format === 'jpg'
+        ? await page.screenshot({ fullPage: true, type: 'jpeg', quality: 90 })
+        : await page.pdf({ format: 'A4', printBackground: true });
+    res.statusCode = 200;
+    res.setHeader('content-type', format === 'jpg' ? 'image/jpeg' : 'application/pdf');
+    res.end(buf);
+  } finally {
+    await browser.close();
+  }
+}
+
 export default function reportPlugin(): Plugin {
   return {
     name: 'zhanyan-report',
@@ -242,8 +274,12 @@ export default function reportPlugin(): Plugin {
             if (parts.length > 2) return sendJson(res, 404, { error: 'not found' });
 
             if (!action) {
-              if (req.method !== 'GET') return sendJson(res, 405, { error: 'method not allowed' });
-              return handleGetHtml(key, res);
+              if (req.method === 'GET') return handleGetHtml(key, res);
+              if (req.method === 'DELETE') {
+                handleDeleteReport(key);
+                return sendJson(res, 200, { ok: true });
+              }
+              return sendJson(res, 405, { error: 'method not allowed' });
             }
             if (action === 'status') {
               if (req.method !== 'GET') return sendJson(res, 405, { error: 'method not allowed' });
@@ -253,6 +289,11 @@ export default function reportPlugin(): Plugin {
               if (req.method !== 'POST') return sendJson(res, 405, { error: 'method not allowed' });
               const raw = await readBody(req);
               return action === 'generate' ? handleGenerate(key, raw, res) : handleRender(key, raw, res);
+            }
+            if (action === 'export') {
+              if (req.method !== 'POST') return sendJson(res, 405, { error: 'method not allowed' });
+              const raw = await readBody(req);
+              return handleExport(key, raw, res);
             }
             return sendJson(res, 404, { error: 'not found' });
           } catch (e) {
