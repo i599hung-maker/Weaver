@@ -32,3 +32,14 @@ describe('settings AI 欄位', () => {
     expect(aiRequestParams()).toEqual({ provider: 'claude', model: 'haiku' });
   });
 });
+
+describe('reportStyle', () => {
+  it('預設白話', () => {
+    expect(DEFAULT_SETTINGS.reportStyle).toBe('plain');
+  });
+
+  it('舊資料缺欄位時自動補 plain', () => {
+    stubStorage({ 'zhanyan-settings': JSON.stringify({ chartMode: 'full' }) });
+    expect(loadSettings().reportStyle).toBe('plain');
+  });
+});

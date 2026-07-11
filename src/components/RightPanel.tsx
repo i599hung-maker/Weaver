@@ -5,7 +5,7 @@ import type { Mingzhu } from '../store/mingzhu';
 import { buildAnalysis } from '../analysis/analysis';
 import { buildReportHeader } from '../analysis/reportPrompts';
 import { buildBookChapters, buildBookData } from '../analysis/reportBook';
-import { aiRequestParams } from '../store/settings';
+import { aiRequestParams, loadSettings } from '../store/settings';
 import Chart from './Chart';
 import HoroscopeBar from './HoroscopeBar';
 import AnalysisPanel from './AnalysisPanel';
@@ -74,7 +74,7 @@ export default function RightPanel({ mingzhu, result, simple }: Props) {
     try {
       const currentYear = new Date().getFullYear();
       const book = buildBookData(result, analysis, currentYear);
-      const chapters = buildBookChapters(analysis, book, currentYear, mingzhu.profile);
+      const chapters = buildBookChapters(analysis, book, currentYear, mingzhu.profile, loadSettings().reportStyle);
       const res = await fetch(`/api/report/${mingzhu.id}/generate`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },

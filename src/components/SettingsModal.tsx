@@ -106,6 +106,17 @@ export default function SettingsModal({ open, settings, onClose, onChange }: Pro
           </span>
         </div>
 
+        <label className="m-row">
+          <span className="m-label">命書風格</span>
+          <select
+            value={settings.reportStyle}
+            onChange={(e) => onChange({ ...settings, reportStyle: e.target.value as Settings['reportStyle'] })}
+          >
+            <option value="plain">白話（接地氣）</option>
+            <option value="classic">書面（正式）</option>
+          </select>
+        </label>
+
         <div className="modal-actions">
           <button className="primary" onClick={onClose}>
             完成

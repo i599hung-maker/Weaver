@@ -4,7 +4,7 @@ import type { CastResult } from '../engine/cast';
 import { buildAnalysis } from '../analysis/analysis';
 import { buildChatPrompt } from '../analysis/chatPrompt';
 import { buildReportHeader } from '../analysis/reportPrompts';
-import { aiRequestParams } from '../store/settings';
+import { aiRequestParams, loadSettings } from '../store/settings';
 import ProfileCard from './ProfileCard';
 import {
   newId,
@@ -176,7 +176,7 @@ export default function ChatPanel({ mingzhu, result, activeConvId, onSelectConv,
       const question = last.text;
       const qMode: Mode = last.mode ?? 'chat';
       const history = conv.messages.slice(0, -1);
-      const prompt = buildChatPrompt(analysis, history, question, new Date().getFullYear(), qMode, mingzhu.profile);
+      const prompt = buildChatPrompt(analysis, history, question, new Date().getFullYear(), qMode, mingzhu.profile, loadSettings().reportStyle);
       const res = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -276,6 +276,7 @@ export default function ChatPanel({ mingzhu, result, activeConvId, onSelectConv,
       new Date().getFullYear(),
       mode,
       mingzhu.profile,
+      loadSettings().reportStyle,
     );
     return Math.round((estimateTokens(prompt) / CONTEXT_LIMIT) * 100);
   }, [analysis, activeConv, input, mode, mingzhu.profile]);

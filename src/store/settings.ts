@@ -1,5 +1,7 @@
 /** 使用者介面設定：localStorage 持久化 */
 
+import type { ReportStyle } from '../analysis/chatPrompt';
+
 export interface Settings {
   /** 右側盤面顯示模式，預設精簡盤 */
   chartMode: 'simple' | 'full';
@@ -7,11 +9,13 @@ export interface Settings {
   aiProvider: string;
   /** 模型 id（該供應商底下） */
   aiModel: string;
+  /** 命書文風：白話（預設）或書面（正式） */
+  reportStyle: ReportStyle;
 }
 
 const KEY = 'zhanyan-settings';
 
-export const DEFAULT_SETTINGS: Settings = { chartMode: 'simple', aiProvider: 'claude', aiModel: 'opus' };
+export const DEFAULT_SETTINGS: Settings = { chartMode: 'simple', aiProvider: 'claude', aiModel: 'opus', reportStyle: 'plain' };
 
 export function loadSettings(): Settings {
   try {
