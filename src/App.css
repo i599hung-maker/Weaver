@@ -1380,3 +1380,51 @@ footer {
     display: none;
   }
 }
+
+/* 設定頁 AI 區塊：分節標題、測試串接燈號 */
+.m-section {
+  margin: 14px 0 6px;
+  font-size: 14px;
+  color: #888;
+}
+.ai-test {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+.ai-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: none;
+  background: #999; /* idle：未測試 */
+}
+.ai-dot.testing {
+  background: #e6b800;
+  animation: ai-dot-blink 1s infinite;
+}
+.ai-dot.ok {
+  background: #2ecc71;
+}
+.ai-dot.fail {
+  background: #e74c3c;
+}
+@keyframes ai-dot-blink {
+  50% {
+    opacity: 0.3;
+  }
+}
+.ai-msg {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ai-msg.ok {
+  color: #2ecc71;
+}
+.ai-msg.fail {
+  color: #e74c3c;
+}
