@@ -17,7 +17,7 @@ function fmtTime(iso: string): string {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
-/** 中欄報告書清單：開啟／輸出 JPG／輸出 PDF／刪除 */
+/** 中欄報告書清單：開啟／輸出 JPG／輸出 PDF／輸出 MD／刪除 */
 export default function ReportsCard({ mingzhu, onUpdate }: Props) {
   const [bookStatus, setBookStatus] = useState<BookStatusInfo>({ done: false });
   const [busy, setBusy] = useState<string | null>(null); // `${key}:${format}` 或 `${key}:del`
@@ -43,7 +43,7 @@ export default function ReportsCard({ mingzhu, onUpdate }: Props) {
   const list = mergeReports(mingzhu, bookStatus);
   if (list.length === 0) return null;
 
-  const exportReport = async (r: ReportMeta, format: 'jpg' | 'pdf') => {
+  const exportReport = async (r: ReportMeta, format: 'jpg' | 'pdf' | 'md') => {
     setBusy(`${r.key}:${format}`);
     setError(null);
     try {
@@ -119,7 +119,7 @@ export default function ReportsCard({ mingzhu, onUpdate }: Props) {
             <span className="rr-time">{fmtTime(r.createdAt)}{model ? `・${model}` : ''}</span>
           </button>
           <span className="rr-actions">
-            {(['jpg', 'pdf'] as const).map((f) => (
+            {(['jpg', 'pdf', 'md'] as const).map((f) => (
               <button key={f} disabled={busy !== null} onClick={() => void exportReport(r, f)} title={`輸出 ${f.toUpperCase()}`}>
                 {busy === `${r.key}:${f}` ? <LoaderCircle size={13} className="spin" /> : <Download size={13} strokeWidth={1.8} />}
                 {f.toUpperCase()}

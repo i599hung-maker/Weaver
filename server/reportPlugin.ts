@@ -4,11 +4,12 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Plugin } from 'vite';
 import { callAi } from './aiCall.js';
 import { renderBookHtml, renderReportHtml, type BookData, type ReportHeader, type ReportSection } from './reportTemplate.js';
+import { renderBookMarkdown, renderReportMarkdown } from './reportMarkdown.js';
 
 /**
  * 命書報告產生（dev middleware，掛 /api/report）：
- * - POST /api/report/:key/generate → 背景逐章呼叫 claude 生成，寫 data/reports/<key>.html
- * - POST /api/report/:key/render   → 同步以現成 markdown 段落渲染寫檔（不呼叫 claude）
+ * - POST /api/report/:key/generate → 背景逐章呼叫 claude 生成，寫 data/reports/<key>.html 與 <key>.md
+ * - POST /api/report/:key/render   → 同步以現成 markdown 段落渲染寫檔（不呼叫 claude），同步存 <key>.md
  * - GET  /api/report/:key/status   → { status, done, total, error?, updatedAt? }
  * - GET  /api/report/:key          → 回報告 HTML
  */
@@ -70,6 +71,10 @@ function statusPath(key: string): string {
   return join(REPORT_DIR, `${key}.status.json`);
 }
 
+function mdPath(key: string): string {
+  return join(REPORT_DIR, `${key}.md`);
+}
+
 function ensureDir(): void {
   mkdirSync(REPORT_DIR, { recursive: true });
 }
@@ -125,32 +130,34 @@ async function runGenerateJob(key: string, body: GenerateBody): Promise<void> {
       writeStatus(key, { status: 'running', done: outputs.length, total });
     }
     let html: string;
+    let md: string;
+    const generatedAt = nowLabel();
+    const modelLabel = typeof body.modelLabel === 'string' ? body.modelLabel : undefined;
     if (body.book) {
       // 視覺化命書：每章解析 JSON 槽位，解析失敗帶原始文字給 fallback 區塊
       const chapters: Record<string, unknown> = {};
       for (const c of outputs) chapters[c.key] = parseChapterJson(c.text) ?? { __fallbackMd: c.text };
-      html = renderBookHtml({
+      const opts = {
         title: body.title,
         name: body.name,
         header: body.header,
         book: body.book,
         chapters,
-        generatedAt: nowLabel(),
-        modelLabel: typeof body.modelLabel === 'string' ? body.modelLabel : undefined,
-      });
+        generatedAt,
+        modelLabel,
+      };
+      html = renderBookHtml(opts);
+      md = renderBookMarkdown(opts);
     } else {
       const sections: ReportSection[] = outputs.map((c) => ({ title: c.title, markdown: c.text }));
-      html = renderReportHtml({
-        title: body.title,
-        name: body.name,
-        header: body.header,
-        sections,
-        generatedAt: nowLabel(),
-        modelLabel: typeof body.modelLabel === 'string' ? body.modelLabel : undefined,
-      });
+      const opts = { title: body.title, name: body.name, header: body.header, sections, generatedAt, modelLabel };
+      html = renderReportHtml(opts);
+      // 舊版逐章文章：各章 ## 標題＋markdown 原文串接（與單題同一組字器）
+      md = renderReportMarkdown(opts);
     }
     ensureDir();
     writeFileSync(htmlPath(key), html);
+    writeFileSync(mdPath(key), md); // MD 源檔：供 export format=md 直接下載
     writeStatus(key, { status: 'done', done: total, total });
   } catch (e) {
     writeStatus(key, { status: 'error', done: outputs.length, total, error: (e as Error).message });
@@ -189,7 +196,7 @@ function handleRender(key: string, raw: string, res: ServerResponse): void {
   if (body.sections.some((s) => typeof s.title !== 'string' || typeof s.markdown !== 'string')) {
     return sendJson(res, 400, { error: '每個 section 需含 title 與 markdown' });
   }
-  const html = renderReportHtml({
+  const opts = {
     title: body.title,
     name: body.name,
     header: body.header,
@@ -197,9 +204,10 @@ function handleRender(key: string, raw: string, res: ServerResponse): void {
     generatedAt: nowLabel(),
     question: typeof body.question === 'string' ? body.question : undefined,
     modelLabel: typeof body.modelLabel === 'string' ? body.modelLabel : undefined,
-  });
+  };
   ensureDir();
-  writeFileSync(htmlPath(key), html);
+  writeFileSync(htmlPath(key), renderReportHtml(opts));
+  writeFileSync(mdPath(key), renderReportMarkdown(opts)); // MD 源檔：供 export format=md 直接下載
   writeStatus(key, { status: 'done', done: body.sections.length, total: body.sections.length });
   sendJson(res, 200, { ok: true });
 }
@@ -233,17 +241,29 @@ function handleGetHtml(key: string, res: ServerResponse): void {
   res.end(readFileSync(htmlPath(key), 'utf8'));
 }
 
-/** 刪報告：html 與 status 檔都移除（不存在視同成功） */
+/** 刪報告：html、md 與 status 檔都移除（不存在視同成功） */
 export function handleDeleteReport(key: string): void {
   rmSync(htmlPath(key), { force: true });
+  rmSync(mdPath(key), { force: true });
   rmSync(statusPath(key), { force: true });
 }
 
-/** Playwright 輸出：jpg＝整頁長圖、pdf＝A4 含背景。reducedMotion 讓模板進場動畫區塊直接顯示 */
-async function handleExport(key: string, raw: string, res: ServerResponse): Promise<void> {
-  if (!existsSync(htmlPath(key))) return sendJson(res, 404, { error: '找不到報告' });
+/**
+ * 輸出：jpg＝整頁長圖、pdf＝A4 含背景（皆走 Playwright）、md＝直接回產生時存的 MD 源檔。
+ * reducedMotion 讓模板進場動畫區塊直接顯示。export 供測試直接呼叫。
+ */
+export async function handleExport(key: string, raw: string, res: ServerResponse): Promise<void> {
   const { format, theme } = JSON.parse(raw || '{}') as { format?: string; theme?: string };
-  if (format !== 'jpg' && format !== 'pdf') return sendJson(res, 400, { error: 'format 需為 jpg 或 pdf' });
+  if (format === 'md') {
+    // 舊報告產生時尚無 MD 源檔（不做 HTML 反轉），提示重產
+    if (!existsSync(mdPath(key))) return sendJson(res, 404, { error: '此報告尚無 MD 檔，重新產生後即可下載' });
+    res.statusCode = 200;
+    res.setHeader('content-type', 'text/markdown; charset=utf-8');
+    res.end(readFileSync(mdPath(key), 'utf8'));
+    return;
+  }
+  if (!existsSync(htmlPath(key))) return sendJson(res, 404, { error: '找不到報告' });
+  if (format !== 'jpg' && format !== 'pdf') return sendJson(res, 400, { error: 'format 需為 jpg、pdf 或 md' });
   const { chromium } = await import('playwright');
   const browser = await chromium.launch();
   try {

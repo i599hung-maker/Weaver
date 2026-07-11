@@ -662,9 +662,10 @@ const BOOK_SCRIPT = `
         bar.querySelectorAll('button').forEach(function(x){x.classList.remove('on')}); b.classList.add('on'); };
       bar.appendChild(b);
     });
-    /* 下載鈕：以目前配色輸出 JPG／PDF（走 /export API，切換器不入圖） */
+    /* 下載鈕：以目前配色輸出 JPG／PDF，MD 直接回源檔（走 /export API，切換器不入圖）；
+       404 帶 error（如舊報告無 MD 檔）時 alert 伺服器的提示訊息 */
     var sep=document.createElement('i'); sep.className='tp-sep'; bar.appendChild(sep);
-    ['jpg','pdf'].forEach(function(f){
+    ['jpg','pdf','md'].forEach(function(f){
       var d=document.createElement('button'); d.type='button'; d.className='tp-dl';
       d.textContent=f.toUpperCase(); d.title='下載 '+f.toUpperCase();
       d.onclick=function(){
@@ -672,7 +673,8 @@ const BOOK_SCRIPT = `
         d.disabled=true; d.textContent='…';
         fetch(location.pathname+'/export',{method:'POST',headers:{'content-type':'application/json'},
           body:JSON.stringify({format:f,theme:root.dataset.theme})})
-          .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.blob(); })
+          .then(function(r){ if(!r.ok) return r.json().then(function(j){ throw new Error(j&&j.error||('HTTP '+r.status)); },
+            function(){ throw new Error('HTTP '+r.status); }); return r.blob(); })
           .then(function(bl){ var a=document.createElement('a'); a.href=URL.createObjectURL(bl);
             a.download=document.title+'.'+f; a.click(); URL.revokeObjectURL(a.href); })
           .catch(function(e){ alert('下載失敗：'+e.message); })
