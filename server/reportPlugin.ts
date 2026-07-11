@@ -1,9 +1,8 @@
-import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { tmpdir } from 'node:os';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Plugin } from 'vite';
+import { callAi } from './aiCall.js';
 import { renderBookHtml, renderReportHtml, type BookData, type ReportHeader, type ReportSection } from './reportTemplate.js';
 
 /**
@@ -27,6 +26,9 @@ interface GenerateBody {
   name: string;
   header: ReportHeader;
   chapters: ReportChapterSpec[];
+  /** AI 供應商/模型（未帶預設 claude/opus） */
+  provider?: string;
+  model?: string;
   /** 視覺化命書 v2：有 book 走 renderBookHtml（章節輸出為 JSON 槽位），無則走舊版逐章文章 */
   book?: BookData;
 }
@@ -87,34 +89,6 @@ function readBody(req: IncomingMessage): Promise<string> {
   });
 }
 
-/** 同 server/analyzePlugin.ts：呼叫本機已登入的 Claude Code（headless） */
-function callClaudeCli(prompt: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const env = { ...process.env };
-    delete env.CLAUDECODE; // 允許在 Claude Code 之外以子行程執行
-    const child = spawn('claude', ['-p', '--output-format', 'text', '--model', 'opus'], {
-      env,
-      cwd: tmpdir(),
-      stdio: ['pipe', 'pipe', 'pipe'],
-    });
-    let out = '';
-    let err = '';
-    const timer = setTimeout(() => {
-      child.kill();
-      reject(new Error('claude CLI 逾時（600 秒）'));
-    }, 600_000);
-    child.stdout.on('data', (d) => (out += d));
-    child.stderr.on('data', (d) => (err += d));
-    child.on('close', (code) => {
-      clearTimeout(timer);
-      if (code === 0) resolve(out.trim());
-      else reject(new Error(`claude CLI 失敗（code ${code}）：${err.slice(0, 500)}`));
-    });
-    child.stdin.write(prompt);
-    child.stdin.end();
-  });
-}
-
 function nowLabel(): string {
   return new Date().toLocaleString('zh-TW', { hour12: false });
 }
@@ -140,7 +114,7 @@ async function runGenerateJob(key: string, body: GenerateBody): Promise<void> {
   try {
     writeStatus(key, { status: 'running', done: 0, total });
     for (const chapter of body.chapters) {
-      const text = await callClaudeCli(chapter.prompt);
+      const text = await callAi(body.provider ?? 'claude', body.model ?? 'opus', chapter.prompt);
       outputs.push({ key: chapter.key, title: chapter.title, text });
       writeStatus(key, { status: 'running', done: outputs.length, total });
     }
