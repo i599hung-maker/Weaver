@@ -7,6 +7,7 @@ import { buildReportHeader } from '../analysis/reportPrompts';
 import { aiRequestParams, loadSettings } from '../store/settings';
 import { questionTitle, upsertReport } from '../store/reportList';
 import ProfileCard from './ProfileCard';
+import ReportsCard from './ReportsCard';
 import {
   newId,
   saveMingzhu,
@@ -318,6 +319,7 @@ export default function ChatPanel({ mingzhu, result, activeConvId, onSelectConv,
       <div className="chat-col">
         {chatHead}
         <ProfileCard mingzhu={mingzhu} onUpdate={onUpdate} />
+        <ReportsCard mingzhu={mingzhu} onUpdate={onUpdate} />
         <div className="conv-home">
           <div className="conv-list">
             {mingzhu.conversations.length > 0 ? (

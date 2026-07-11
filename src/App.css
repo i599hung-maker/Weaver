@@ -92,8 +92,19 @@
   height: var(--headbar-h);
   margin: -14px -12px 0; /* 抵銷 .sidebar 內距，底線滿版並與中右欄同高 */
   padding: 0 16px;
-  border-bottom: 1px solid transparent; /* 隱藏但保留佔位，高度對齊不變 */
   color: var(--text);
+  /* 品牌鈕（回首頁）：蓋掉全域 button 外框，只留 hover 提示 */
+  width: calc(100% + 24px);
+  border: none;
+  border-bottom: 1px solid transparent; /* 隱藏但保留佔位，高度對齊不變 */
+  border-radius: 0;
+  background: transparent;
+  text-align: left;
+  flex-shrink: 0;
+}
+
+.sb-brand:hover {
+  background: var(--bg-hover);
 }
 
 .sb-brand h1 {
@@ -1589,4 +1600,249 @@ footer {
 }
 .pc-count.over {
   color: #e6b800;
+}
+
+/* ── 首頁介紹（未選命主／點品牌鈕）───────────── */
+.home {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto; /* .main 本身 overflow:hidden，首頁自行捲動 */
+  width: 100%;
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 56px 24px 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: home-in 0.5s ease-out both;
+}
+
+@keyframes home-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* 羅盤環：十二地支繞金色羅盤緩轉，呼應命盤十二宮 */
+.home-ring {
+  position: relative;
+  width: 168px;
+  height: 168px;
+  margin-bottom: 20px;
+}
+
+.home-ring-spin {
+  position: absolute;
+  inset: 0;
+  animation: home-spin 90s linear infinite;
+}
+
+.home-ring-spin span {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin: -10px 0 0 -10px; /* 置中 20px 字框後再旋轉外推 */
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Kaiti TC', 'BiauKai', 'DFKai-SB', serif;
+  font-size: 14px;
+  color: var(--text-3);
+}
+
+.home-ring-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--gold);
+  opacity: 0.9;
+}
+
+@keyframes home-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home {
+    animation: none;
+  }
+  .home-ring-spin {
+    animation: none;
+  }
+}
+
+.home-title {
+  margin: 0 0 10px;
+  font-family: 'Kaiti TC', 'BiauKai', 'DFKai-SB', serif;
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: var(--text);
+}
+
+.home-lede {
+  margin: 0 0 32px;
+  max-width: 400px;
+  text-align: center;
+  color: var(--text-2);
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.home-features {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 640px) {
+  .home-features {
+    grid-template-columns: 1fr;
+  }
+}
+
+.home-feature {
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: rgba(28, 28, 31, 0.6); /* 同 --bg-panel 帶 alpha，透出星空 */
+}
+
+.home-feature-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--gold);
+  opacity: 0.85;
+}
+
+.home-feature-title {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.home-feature-desc {
+  font-size: 13px;
+  color: var(--text-2);
+  line-height: 1.7;
+}
+
+/* 門派註記：命書式的細字補註 */
+.home-note {
+  width: 100%;
+  margin-bottom: 32px;
+  padding: 12px 16px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  font-size: 12.5px;
+  color: var(--text-3);
+  line-height: 1.8;
+}
+
+.home-note-label {
+  font-family: 'Kaiti TC', 'BiauKai', 'DFKai-SB', serif;
+  color: var(--gold);
+  opacity: 0.85;
+  margin-right: 8px;
+}
+
+.home-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.home-hint {
+  margin-top: 14px;
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+/* 報告書清單：中欄個人背景下方 */
+.reports-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.rc-title {
+  font-size: 13px;
+  color: var(--text-2);
+  margin-bottom: 2px;
+}
+.report-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.report-row .rr-open {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 4px;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 13.5px;
+  cursor: pointer;
+  text-align: left;
+  border-radius: 8px;
+}
+.report-row .rr-open:hover {
+  background: var(--bg-hover);
+}
+.rr-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rr-time {
+  flex: none;
+  font-size: 11.5px;
+  color: var(--text-3);
+}
+.rr-actions {
+  display: inline-flex;
+  gap: 4px;
+  flex: none;
+}
+.rr-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11.5px;
+  padding: 3px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: none;
+  color: var(--text-2);
+}
+.rr-actions button:hover:not(:disabled) {
+  color: var(--text);
+  background: var(--bg-hover);
+}
+.rr-actions .rr-del:hover:not(:disabled) {
+  color: var(--malefic);
 }
