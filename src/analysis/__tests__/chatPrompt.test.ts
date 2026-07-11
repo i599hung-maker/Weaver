@@ -108,3 +108,17 @@ describe('buildChatPrompt', () => {
     expect(prompt).toMatch(/\[權重\d\]〔[^〕]+〕/);
   });
 });
+
+describe('個人背景 profile', () => {
+  it('有 profile 時含自述段落與原文', () => {
+    const prompt = buildChatPrompt(analysis, [], '問題', 2026, 'chat', '軟體工程師，2021 結婚');
+    expect(prompt).toContain('【命主自述背景】');
+    expect(prompt).toContain('軟體工程師，2021 結婚');
+    expect(prompt).toContain('對照驗盤');
+  });
+
+  it('未傳或空白時不含自述段落', () => {
+    expect(buildChatPrompt(analysis, [], '問題', 2026)).not.toContain('【命主自述背景】');
+    expect(buildChatPrompt(analysis, [], '問題', 2026, 'chat', '   ')).not.toContain('【命主自述背景】');
+  });
+});

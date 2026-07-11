@@ -78,13 +78,21 @@ const REPORT_REQUIREMENTS = `【回答要求】
 3. 若先前對話有相關內容，可延續其脈絡。
 4. 全文 800~1500 字，用繁體中文，語氣專業但白話，不要免責聲明。`;
 
-/** 組對話用提示詞：整盤事實＋全部引動年份＋對話歷史＋本次問題 */
+/** 命主自述背景段落：聊天與命書 prompt 共用；未填回空字串 */
+export function profileSection(profile?: string): string {
+  const p = profile?.trim();
+  if (!p) return '';
+  return `【命主自述背景】（命主自行填寫，僅供貼近解讀）\n${p}\n（自述中提到的事件年份可與引動年份對照驗盤，命中的引動可作為斷應期信心依據並向命主指出；解讀請貼合命主的實際處境。）`;
+}
+
+/** 組對話用提示詞：整盤事實＋全部引動年份＋自述背景＋對話歷史＋本次問題 */
 export function buildChatPrompt(
   analysis: ChartAnalysis,
   history: ChatMessage[],
   question: string,
   currentYear: number,
   mode: 'chat' | 'report' = 'chat',
+  profile?: string,
 ): string {
   const h = analysis.header;
 
@@ -94,6 +102,9 @@ export function buildChatPrompt(
     `【盤面事實】\n${topicsDesc(analysis)}`,
     `【斷應期引動年份】（占驗派流命引動法＋疊星引動法，程式計算，勿自行增減；〔〕內為所屬主題）\n${allDecadalDesc(analysis)}`,
   ];
+
+  const ps = profileSection(profile);
+  if (ps) sections.push(ps);
 
   if (history.length > 0) {
     sections.push(`【先前對話】\n${historyDesc(history)}`);

@@ -25,6 +25,8 @@ export interface Mingzhu {
   id: string;
   name: string;
   birth: BirthInput;
+  /** 個人背景自述（選填）：職業、感情、重大事件年份等，餵給 AI 貼近解讀 */
+  profile?: string;
   createdAt: string;
   conversations: Conversation[];
 }
