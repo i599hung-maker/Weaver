@@ -1,6 +1,20 @@
 # Changelog
 
-## [Unreleased] - 2026-07-11 07:25
+## [Unreleased] - 2026-07-11 09:07
+
+### Added（新增）
+- 設定頁「AI 模型」區塊：可選供應商與模型（Claude：Haiku／Sonnet／Opus／Fable，預設 Opus），供應商註冊表架構（`src/ai/providers.ts`）預留之後新增 Antigravity 等供應商
+- 測試串接按鈕與燈號：`POST /api/ai/test` 實際呼叫選定模型，成功綠燈＋耗時、失敗紅燈＋錯誤訊息
+- 新增命主「出生時間」改為 iOS 式五欄滾輪（年／月／日／時／分，上下滑動置中選取），日數隨年月自動調整（閏年、大小月夾回）
+- 星空背景：主畫面與命書同款星點動畫
+
+### Changed（變更）
+- 統一 AI 呼叫入口 `server/aiCall.ts`：聊天分析與命書生成都吃設定中的供應商／模型（原本寫死 Opus），合併兩份重複的 claude CLI 呼叫
+- 新增命主表單欄位順序改為 稱呼→性別→出生地→出生時間
+- 左中右三欄頂部標題列統一高度（`--headbar-h: 54px`）對齊，分隔線以透明佔位隱藏
+- 測試擴充至 74 tests（新增 providers／settings／aiCall／aiTestPlugin／birthWheel）
+
+## [先前] - 2026-07-11 07:25
 
 ### Added（新增）
 - 命主管理系統：新增／改名／刪除命主，資料存本機 `data/`（storagePlugin，不上傳）

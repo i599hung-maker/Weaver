@@ -1,5 +1,40 @@
+/* ── 星空背景（同命書版型）：壓在最底層，透明區塊透出 ── */
+.sky {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.sky i {
+  position: absolute;
+  border-radius: 50%;
+  background: #e7cb84;
+  opacity: 0;
+  animation: tw 6s infinite ease-in-out;
+}
+
+@keyframes tw {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sky i {
+    animation: none;
+    opacity: 0.35;
+  }
+}
+
 /* ── 版面：三欄（側欄｜對話｜盤面），全高、各自捲動 ── */
 .layout {
+  position: relative;
+  z-index: 1;
   display: flex;
   height: 100vh;
   overflow: hidden;
@@ -10,7 +45,7 @@
   flex-shrink: 0;
   height: 100%;
   overflow-y: auto;
-  background: var(--bg-sidebar);
+  background: rgba(22, 22, 24, 0.72); /* 深色單色＋alpha，透出星空 */
   border-right: 1px solid var(--border);
   padding: 14px 12px;
   display: flex;
@@ -54,7 +89,10 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 2px 4px;
+  height: var(--headbar-h);
+  margin: -14px -12px 0; /* 抵銷 .sidebar 內距，底線滿版並與中右欄同高 */
+  padding: 0 16px;
+  border-bottom: 1px solid transparent; /* 隱藏但保留佔位，高度對齊不變 */
   color: var(--text);
 }
 
@@ -529,7 +567,7 @@ button > svg {
   grid-template-columns: auto auto; /* 一列一個資訊：標籤＋內容 */
   justify-content: center;
   gap: 4px 10px;
-  font-size: 13px;
+  font-size: 12px;
   align-content: center;
   margin: auto 0; /* 在中宮內上下置中（圖例仍貼底） */
   text-align: left;
@@ -928,12 +966,15 @@ footer {
   padding: 10px 18px 16px;
 }
 
-/* 中欄頂部：命主名＋生辰（點選命主後顯示） */
+/* 中欄頂部：命主名＋生辰（點選命主後顯示），底下分隔線與右欄置頂列對齊 */
 .chat-head {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 10px;
-  padding: 6px 2px 12px;
+  height: var(--headbar-h);
+  margin: -10px -18px 10px; /* 抵銷 .chat-col 上內距，底線與左右欄同高 */
+  padding: 0 20px;
+  border-bottom: 1px solid transparent; /* 隱藏但保留佔位，高度對齊不變 */
 }
 
 .chat-head b {
@@ -1024,10 +1065,7 @@ footer {
 .chat-msgs {
   flex: 1;
   min-height: 0;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 12px;
+  padding: 12px 4px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -1240,7 +1278,7 @@ footer {
   min-width: 0;
   height: 100%;
   border-left: 1px solid var(--border);
-  background: var(--bg);
+  background: rgba(19, 19, 20, 0.55); /* 透出星空 */
 }
 
 .right-panel {
@@ -1257,10 +1295,12 @@ footer {
   display: flex;
   align-items: center;
   gap: 6px;
+  height: var(--headbar-h);
   margin: 0 -14px 12px;
-  padding: 10px 14px;
-  background: var(--bg);
-  border-bottom: 1px solid var(--border);
+  padding: 0 14px;
+  background: rgba(19, 19, 20, 0.85); /* sticky 蓋過捲動內容，半透明＋模糊 */
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid transparent; /* 隱藏但保留佔位，高度對齊不變 */
 }
 
 .rp-tabs > button {

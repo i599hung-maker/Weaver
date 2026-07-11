@@ -16,6 +16,33 @@ import {
 import { loadSettings, saveSettings, type Settings } from './store/settings';
 import './App.css';
 
+/** 星空背景：與命書版型同款（位置／大小／延遲用固定公式，維持 render 穩定） */
+const SKY_STARS = Array.from({ length: 46 }, (_, i) => ({
+  left: (i * 53) % 100,
+  top: (i * 29) % 100,
+  size: (i % 3) + 1,
+  delay: i % 6,
+}));
+
+function Sky() {
+  return (
+    <div className="sky" aria-hidden="true">
+      {SKY_STARS.map((s, i) => (
+        <i
+          key={i}
+          style={{
+            left: `${s.left}%`,
+            top: `${s.top}%`,
+            width: s.size,
+            height: s.size,
+            animationDelay: `${s.delay}s`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
 /** 欄寬（px）記憶：側欄與右欄，拖分隔線調整 */
 const WIDTHS_KEY = 'zhanyan-col-widths';
 
@@ -167,10 +194,12 @@ export default function App() {
   };
 
   return (
-    <div
-      className="layout"
-      style={{ '--sb-w': `${widths.sb}px`, '--rp-w': `${widths.rp}px` } as CSSProperties}
-    >
+    <>
+      <Sky />
+      <div
+        className="layout"
+        style={{ '--sb-w': `${widths.sb}px`, '--rp-w': `${widths.rp}px` } as CSSProperties}
+      >
       <Sidebar
         list={list}
         activeId={activeId}
@@ -233,6 +262,7 @@ export default function App() {
         onClose={() => setSettingsOpen(false)}
         onChange={changeSettings}
       />
-    </div>
+      </div>
+    </>
   );
 }
