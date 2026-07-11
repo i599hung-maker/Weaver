@@ -5,6 +5,7 @@ import { buildAnalysis } from '../analysis/analysis';
 import { buildChatPrompt } from '../analysis/chatPrompt';
 import { buildReportHeader } from '../analysis/reportPrompts';
 import { aiRequestParams } from '../store/settings';
+import ProfileCard from './ProfileCard';
 import {
   newId,
   saveMingzhu,
@@ -175,7 +176,7 @@ export default function ChatPanel({ mingzhu, result, activeConvId, onSelectConv,
       const question = last.text;
       const qMode: Mode = last.mode ?? 'chat';
       const history = conv.messages.slice(0, -1);
-      const prompt = buildChatPrompt(analysis, history, question, new Date().getFullYear(), qMode);
+      const prompt = buildChatPrompt(analysis, history, question, new Date().getFullYear(), qMode, mingzhu.profile);
       const res = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -274,9 +275,10 @@ export default function ChatPanel({ mingzhu, result, activeConvId, onSelectConv,
       input || '（估算用）',
       new Date().getFullYear(),
       mode,
+      mingzhu.profile,
     );
     return Math.round((estimateTokens(prompt) / CONTEXT_LIMIT) * 100);
-  }, [analysis, activeConv, input, mode]);
+  }, [analysis, activeConv, input, mode, mingzhu.profile]);
 
   const askBox = (big: boolean) => (
     <AskBox
@@ -305,6 +307,7 @@ export default function ChatPanel({ mingzhu, result, activeConvId, onSelectConv,
     return (
       <div className="chat-col">
         {chatHead}
+        <ProfileCard mingzhu={mingzhu} onUpdate={onUpdate} />
         <div className="conv-home">
           <div className="conv-list">
             {mingzhu.conversations.length > 0 ? (
@@ -347,6 +350,7 @@ export default function ChatPanel({ mingzhu, result, activeConvId, onSelectConv,
   return (
     <div className="chat-col">
       {chatHead}
+      <ProfileCard mingzhu={mingzhu} onUpdate={onUpdate} />
       <div className="thread">
         <div className="chat-msgs" ref={msgsRef}>
           {activeConv.messages.map((msg, i) => {

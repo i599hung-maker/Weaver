@@ -74,7 +74,7 @@ export default function RightPanel({ mingzhu, result, simple }: Props) {
     try {
       const currentYear = new Date().getFullYear();
       const book = buildBookData(result, analysis, currentYear);
-      const chapters = buildBookChapters(analysis, book, currentYear);
+      const chapters = buildBookChapters(analysis, book, currentYear, mingzhu.profile);
       const res = await fetch(`/api/report/${mingzhu.id}/generate`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
