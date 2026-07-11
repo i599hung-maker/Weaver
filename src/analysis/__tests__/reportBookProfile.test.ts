@@ -23,3 +23,18 @@ describe('buildBookChapters profile', () => {
     }
   });
 });
+
+describe('buildBookChapters style', () => {
+  it('plain 時每章 prompt 都含白話風格段', () => {
+    for (const c of buildBookChapters(analysis, book, 2026, undefined, 'plain')) {
+      expect(c.prompt).toContain('【寫作風格：白話】');
+    }
+  });
+
+  it('classic 與未傳輸出一致且不含風格段', () => {
+    const classic = buildBookChapters(analysis, book, 2026, undefined, 'classic');
+    const none = buildBookChapters(analysis, book, 2026);
+    expect(classic.map((c) => c.prompt)).toEqual(none.map((c) => c.prompt));
+    for (const c of classic) expect(c.prompt).not.toContain('【寫作風格');
+  });
+});

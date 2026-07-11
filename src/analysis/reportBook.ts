@@ -3,7 +3,7 @@ import { ZHANYAN_MUTAGENS } from '../engine/zhanyanConfig';
 import type { ChartAnalysis } from './analysis';
 import type { Topic } from './facts';
 import { groupDesc, headerDesc, type ReportChapterSpec } from './reportPrompts';
-import { profileSection } from './chatPrompt';
+import { profileSection, styleSection, type ReportStyle } from './chatPrompt';
 
 /**
  * 視覺化命書（book v2）資料組裝（純函式，瀏覽器端用）：
@@ -339,9 +339,9 @@ ${JSON_RULE}`;
 }
 
 /** 全書 9 章（視覺化命書 v2）：每章要求 Claude 只輸出一個 JSON 物件 */
-export function buildBookChapters(analysis: ChartAnalysis, book: BookData, currentYear: number, profile?: string): ReportChapterSpec[] {
-  const ps = profileSection(profile);
-  const withProfile = (prompt: string): string => (ps ? `${prompt}\n\n${ps}` : prompt);
+export function buildBookChapters(analysis: ChartAnalysis, book: BookData, currentYear: number, profile?: string, style?: ReportStyle): ReportChapterSpec[] {
+  const extra = [styleSection(style), profileSection(profile)].filter(Boolean).join('\n\n');
+  const withProfile = (prompt: string): string => (extra ? `${prompt}\n\n${extra}` : prompt);
   return [
     { key: 'hero', title: '開卷', prompt: withProfile(heroPrompt(analysis, book, currentYear)) },
     { key: 'gift', title: '天賦印象', prompt: withProfile(giftPrompt(analysis, book)) },
