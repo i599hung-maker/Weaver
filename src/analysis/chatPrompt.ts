@@ -85,6 +85,18 @@ export function profileSection(profile?: string): string {
   return `【命主自述背景】（命主自行填寫，僅供貼近解讀）\n${p}\n（自述中提到的事件年份可與引動年份對照驗盤，命中的引動可作為斷應期信心依據並向命主指出；解讀請貼合命主的實際處境。）`;
 }
 
+export type ReportStyle = 'plain' | 'classic';
+
+/** 命書寫作風格段：plain 回白話規則（語感對標使用者認可的舊版報告），classic／未傳回空字串維持現行輸出 */
+export function styleSection(style?: ReportStyle): string {
+  if (style !== 'plain') return '';
+  return `【寫作風格：白話】
+1. 像跟朋友喝咖啡聊天那樣講，直接對「你」說話；短句優先，一句一個重點。
+2. 每個術語（星曜、宮位、四化、格局）出現後，緊接一句生活白話翻譯它對命主的意思。
+3. 多用具體生活場景與比喻，語感範例：「東西交到你手上會變穩、變大」「錢會來，也容易莫名其妙少一塊」「幫忙可以，擔保不行」。
+4. 結論先講、依據後講；禁止文言堆疊、對仗排比、連續抽象形容詞。`;
+}
+
 /** 組對話用提示詞：整盤事實＋全部引動年份＋自述背景＋對話歷史＋本次問題 */
 export function buildChatPrompt(
   analysis: ChartAnalysis,
@@ -93,6 +105,7 @@ export function buildChatPrompt(
   currentYear: number,
   mode: 'chat' | 'report' = 'chat',
   profile?: string,
+  style?: ReportStyle,
 ): string {
   const h = analysis.header;
 
@@ -112,6 +125,10 @@ export function buildChatPrompt(
 
   sections.push(`【本次問題】\n${question}`);
   sections.push(mode === 'report' ? REPORT_REQUIREMENTS : CHAT_REQUIREMENTS);
+  if (mode === 'report') {
+    const ss = styleSection(style);
+    if (ss) sections.push(ss);
+  }
 
   return sections.join('\n\n');
 }
