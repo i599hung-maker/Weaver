@@ -3,6 +3,7 @@ import { ZHANYAN_MUTAGENS } from '../engine/zhanyanConfig';
 import type { ChartAnalysis } from './analysis';
 import type { Topic } from './facts';
 import { groupDesc, headerDesc, type ReportChapterSpec } from './reportPrompts';
+import { profileSection } from './chatPrompt';
 
 /**
  * 視覺化命書（book v2）資料組裝（純函式，瀏覽器端用）：
@@ -338,16 +339,18 @@ ${JSON_RULE}`;
 }
 
 /** 全書 9 章（視覺化命書 v2）：每章要求 Claude 只輸出一個 JSON 物件 */
-export function buildBookChapters(analysis: ChartAnalysis, book: BookData, currentYear: number): ReportChapterSpec[] {
+export function buildBookChapters(analysis: ChartAnalysis, book: BookData, currentYear: number, profile?: string): ReportChapterSpec[] {
+  const ps = profileSection(profile);
+  const withProfile = (prompt: string): string => (ps ? `${prompt}\n\n${ps}` : prompt);
   return [
-    { key: 'hero', title: '開卷', prompt: heroPrompt(analysis, book, currentYear) },
-    { key: 'gift', title: '天賦印象', prompt: giftPrompt(analysis, book) },
-    { key: 'topic_benming', title: '性格', prompt: topicPrompt(analysis, book, '本命', '性格') },
-    { key: 'topic_shiye', title: '事業', prompt: topicPrompt(analysis, book, '事業', '事業') },
-    { key: 'topic_caiyun', title: '金錢', prompt: topicPrompt(analysis, book, '財運', '金錢') },
-    { key: 'topic_aiqing', title: '感情', prompt: topicPrompt(analysis, book, '愛情', '感情') },
-    { key: 'lims', title: '大限走勢', prompt: limsPrompt(analysis, book, currentYear) },
-    { key: 'events', title: '重點應期', prompt: eventsPrompt(analysis, book, currentYear) },
-    { key: 'compass', title: '人生羅盤', prompt: compassPrompt(analysis, book, currentYear) },
+    { key: 'hero', title: '開卷', prompt: withProfile(heroPrompt(analysis, book, currentYear)) },
+    { key: 'gift', title: '天賦印象', prompt: withProfile(giftPrompt(analysis, book)) },
+    { key: 'topic_benming', title: '性格', prompt: withProfile(topicPrompt(analysis, book, '本命', '性格')) },
+    { key: 'topic_shiye', title: '事業', prompt: withProfile(topicPrompt(analysis, book, '事業', '事業')) },
+    { key: 'topic_caiyun', title: '金錢', prompt: withProfile(topicPrompt(analysis, book, '財運', '金錢')) },
+    { key: 'topic_aiqing', title: '感情', prompt: withProfile(topicPrompt(analysis, book, '愛情', '感情')) },
+    { key: 'lims', title: '大限走勢', prompt: withProfile(limsPrompt(analysis, book, currentYear)) },
+    { key: 'events', title: '重點應期', prompt: withProfile(eventsPrompt(analysis, book, currentYear)) },
+    { key: 'compass', title: '人生羅盤', prompt: withProfile(compassPrompt(analysis, book, currentYear)) },
   ];
 }
