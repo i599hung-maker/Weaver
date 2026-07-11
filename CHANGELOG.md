@@ -1,6 +1,13 @@
 # Changelog
 
-## [Unreleased] - 2026-07-11 09:07
+## [Unreleased] - 2026-07-11 09:42
+
+### Added（新增）
+- 命主「個人背景」卡片（中欄標題下，預設展開）：單一 textarea 自述職業／感情／重大事件年份等，存進命主檔（`Mingzhu.profile`）
+- 自述餵給聊天問答與命書九章 prompt（【命主自述背景】段落），並指示 AI 以自述事件年份對照引動年份驗盤，作為斷應期信心依據
+- 建議字數 500 字＋即時字數計 `n/500`：超過變黃提醒但不阻擋儲存
+
+## [先前] - 2026-07-11 09:07
 
 ### Added（新增）
 - 設定頁「AI 模型」區塊：可選供應商與模型（Claude：Haiku／Sonnet／Opus／Fable，預設 Opus），供應商註冊表架構（`src/ai/providers.ts`）預留之後新增 Antigravity 等供應商
