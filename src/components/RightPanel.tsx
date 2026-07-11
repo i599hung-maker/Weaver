@@ -115,7 +115,7 @@ export default function RightPanel({ mingzhu, result, simple, onUpdate }: Props)
       if (res.status !== 202 && res.status !== 409) throw new Error(`HTTP ${res.status}`);
       const next = upsertReport(mingzhu, {
         key,
-        title: bookTitle(reportStyle),
+        title: bookTitle(mingzhu.name, reportStyle),
         kind: 'book',
         createdAt: new Date().toISOString(),
         provider: ai.provider,

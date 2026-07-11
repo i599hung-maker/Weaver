@@ -14,9 +14,9 @@ function mz(over: Partial<Mingzhu> = {}): Mingzhu {
 }
 
 describe('命名', () => {
-  it('bookTitle 依風格', () => {
-    expect(bookTitle('plain')).toBe('完整命書・白話風');
-    expect(bookTitle('classic')).toBe('完整命書・命理風');
+  it('bookTitle 帶命主名、依風格', () => {
+    expect(bookTitle('王大明', 'plain')).toBe('王大明・完整命書・白話風');
+    expect(bookTitle('王大明', 'classic')).toBe('王大明・完整命書・命理風');
   });
   it('questionTitle 截 20 字、空白 fallback', () => {
     expect(questionTitle('我明年適合換工作嗎？想聽聽事業與財運的整體分析')).toBe('我明年適合換工作嗎？想聽聽事業與財運的整');
@@ -68,7 +68,7 @@ describe('mergeReports', () => {
     });
     const list = mergeReports(m, { done: true, updatedAt: '2026-07-11T03:00:00.000Z' });
     expect(list.map((r) => r.key)).toEqual(['m_test', 'q_1', 'q_legacy']); // 新到舊
-    expect(list.find((r) => r.key === 'm_test')!.title).toBe('完整命書');
+    expect(list.find((r) => r.key === 'm_test')!.title).toBe('測試・完整命書');
     expect(list.find((r) => r.key === 'q_legacy')!.title).toBe('這是一個舊的問題訊息用來推導標題');
     expect(list.find((r) => r.key === 'q_1')!.title).toBe('已記錄問題'); // 記錄優先，不被推導覆蓋
   });

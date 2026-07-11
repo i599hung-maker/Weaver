@@ -2,8 +2,8 @@ import type { Mingzhu, ReportMeta } from './mingzhu';
 
 /** 報告書清單邏輯：命名、記錄 upsert、與舊資料（無紀錄的命書／單題）合併推導 */
 
-export function bookTitle(style: 'plain' | 'classic'): string {
-  return style === 'plain' ? '完整命書・白話風' : '完整命書・命理風';
+export function bookTitle(name: string, style: 'plain' | 'classic'): string {
+  return `${name}・完整命書・${style === 'plain' ? '白話風' : '命理風'}`;
 }
 
 export function questionTitle(question: string): string {
@@ -29,7 +29,7 @@ export function mergeReports(m: Mingzhu, book: BookStatusInfo): ReportMeta[] {
   const derived: ReportMeta[] = [];
 
   if (book.done && !keys.has(m.id)) {
-    derived.push({ key: m.id, title: '完整命書', kind: 'book', createdAt: book.updatedAt ?? m.createdAt });
+    derived.push({ key: m.id, title: `${m.name}・完整命書`, kind: 'book', createdAt: book.updatedAt ?? m.createdAt });
   }
   for (const conv of m.conversations) {
     for (let i = 0; i < conv.messages.length; i++) {
