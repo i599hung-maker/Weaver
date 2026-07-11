@@ -4,6 +4,7 @@ import type { CastResult } from '../engine/cast';
 import { buildAnalysis } from '../analysis/analysis';
 import { buildChatPrompt } from '../analysis/chatPrompt';
 import { buildReportHeader } from '../analysis/reportPrompts';
+import { aiRequestParams } from '../store/settings';
 import {
   newId,
   saveMingzhu,
@@ -178,7 +179,7 @@ export default function ChatPanel({ mingzhu, result, activeConvId, onSelectConv,
       const res = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({ prompt, ...aiRequestParams() }),
       });
       const data = (await res.json()) as { text?: string; error?: string };
       if (!res.ok || !data.text) throw new Error(data.error ?? `HTTP ${res.status}`);

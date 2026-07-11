@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { CastResult } from '../engine/cast';
 import { buildAnalysis, buildPrompt, TOPICS, type Topic } from '../analysis/analysis';
+import { aiRequestParams } from '../store/settings';
 
 interface Props {
   result: CastResult;
@@ -56,7 +57,7 @@ export default function AnalysisPanel({ result, inputKey, onJumpToYear }: Props)
       const res = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({ prompt, ...aiRequestParams() }),
       });
       const data = (await res.json()) as { text?: string; error?: string };
       if (!res.ok || !data.text) throw new Error(data.error ?? `HTTP ${res.status}`);

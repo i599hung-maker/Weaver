@@ -5,6 +5,7 @@ import type { Mingzhu } from '../store/mingzhu';
 import { buildAnalysis } from '../analysis/analysis';
 import { buildReportHeader } from '../analysis/reportPrompts';
 import { buildBookChapters, buildBookData } from '../analysis/reportBook';
+import { aiRequestParams } from '../store/settings';
 import Chart from './Chart';
 import HoroscopeBar from './HoroscopeBar';
 import AnalysisPanel from './AnalysisPanel';
@@ -83,6 +84,7 @@ export default function RightPanel({ mingzhu, result, simple }: Props) {
           header: buildReportHeader(analysis, result.meta),
           book,
           chapters,
+          ...aiRequestParams(),
         }),
       });
       if (res.status !== 202 && res.status !== 409) throw new Error(`HTTP ${res.status}`);
