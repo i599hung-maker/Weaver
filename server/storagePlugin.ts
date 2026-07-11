@@ -23,39 +23,6 @@ function sendJson(res: ServerResponse, status: number, payload: unknown): void {
   res.end(JSON.stringify(payload));
 }
 
-/** 首次啟動：建立 data/ 並寫入三筆定盤範例命主 */
-function seedIfNeeded(): void {
-  if (existsSync(DATA_DIR)) return;
-  mkdirSync(DATA_DIR, { recursive: true });
-  const createdAt = '2026-07-10T00:00:00.000Z';
-  const seeds = [
-    {
-      id: 'm_dingpan1',
-      name: '定盤一',
-      birth: { name: '定盤一', date: '1996-05-12', time: '23:40', gender: '男' },
-      createdAt,
-      conversations: [],
-    },
-    {
-      id: 'm_dingpan2',
-      name: '定盤二',
-      birth: { name: '定盤二', date: '1994-12-02', time: '02:43', gender: '女' },
-      createdAt,
-      conversations: [],
-    },
-    {
-      id: 'm_dingpan3',
-      name: '定盤三',
-      birth: { name: '定盤三', date: '1969-03-11', time: '11:50', gender: '女' },
-      createdAt,
-      conversations: [],
-    },
-  ];
-  for (const s of seeds) {
-    writeFileSync(join(DATA_DIR, `${s.id}.json`), JSON.stringify(s, null, 2));
-  }
-}
-
 function listAll(): unknown[] {
   if (!existsSync(DATA_DIR)) return [];
   const items: { createdAt?: string }[] = [];
@@ -76,7 +43,6 @@ export default function storagePlugin(): Plugin {
   return {
     name: 'zhanyan-mingzhu-storage',
     configureServer(server) {
-      seedIfNeeded();
       server.middlewares.use('/api/mingzhu', (req, res) => {
         try {
           // connect 會剝掉 '/api/mingzhu' 前綴：清單時 url 為 '/'，單筆時為 '/<id>'
