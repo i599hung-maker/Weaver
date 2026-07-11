@@ -5,6 +5,7 @@ import { buildAnalysis } from '../analysis/analysis';
 import { buildChatPrompt } from '../analysis/chatPrompt';
 import { buildReportHeader } from '../analysis/reportPrompts';
 import { aiRequestParams, loadSettings } from '../store/settings';
+import { questionTitle, upsertReport } from '../store/reportList';
 import ProfileCard from './ProfileCard';
 import {
   newId,
@@ -207,7 +208,15 @@ export default function ChatPanel({ mingzhu, result, activeConvId, onSelectConv,
         }
       }
 
-      const next = withConv(base, { ...conv, messages: [...conv.messages, reply] });
+      let next = withConv(base, { ...conv, messages: [...conv.messages, reply] });
+      if (reply.mode === 'report' && reply.reportKey) {
+        next = upsertReport(next, {
+          key: reply.reportKey,
+          title: questionTitle(question),
+          kind: 'question',
+          createdAt: reply.ts,
+        });
+      }
       onUpdate(next);
       await saveMingzhu(next);
     } catch (e) {

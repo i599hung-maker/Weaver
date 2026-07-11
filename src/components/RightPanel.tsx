@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { BookOpen, LoaderCircle } from 'lucide-react';
 import type { CastResult } from '../engine/cast';
-import type { Mingzhu } from '../store/mingzhu';
+import { saveMingzhu, type Mingzhu } from '../store/mingzhu';
+import { bookTitle, upsertReport } from '../store/reportList';
 import { buildAnalysis } from '../analysis/analysis';
 import { buildReportHeader } from '../analysis/reportPrompts';
 import { buildBookChapters, buildBookData } from '../analysis/reportBook';
@@ -15,6 +16,7 @@ interface Props {
   result: CastResult;
   /** 精簡盤（true）／完整盤（false），由左下角「設定」控制 */
   simple: boolean;
+  onUpdate: (m: Mingzhu) => void;
 }
 
 interface ReportStatus {
@@ -24,7 +26,7 @@ interface ReportStatus {
   error?: string;
 }
 
-export default function RightPanel({ mingzhu, result, simple }: Props) {
+export default function RightPanel({ mingzhu, result, simple, onUpdate }: Props) {
   const analysis = useMemo(() => buildAnalysis(result), [result]);
   const [tab, setTab] = useState<'chart' | 'yingqi'>('chart');
   const [selDecadalBranch, setSelDecadalBranch] = useState<string | null>(null);
@@ -73,8 +75,9 @@ export default function RightPanel({ mingzhu, result, simple }: Props) {
     setGenErr(null);
     try {
       const currentYear = new Date().getFullYear();
+      const reportStyle = loadSettings().reportStyle;
       const book = buildBookData(result, analysis, currentYear);
-      const chapters = buildBookChapters(analysis, book, currentYear, mingzhu.profile, loadSettings().reportStyle);
+      const chapters = buildBookChapters(analysis, book, currentYear, mingzhu.profile, reportStyle);
       const res = await fetch(`/api/report/${mingzhu.id}/generate`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -88,6 +91,14 @@ export default function RightPanel({ mingzhu, result, simple }: Props) {
         }),
       });
       if (res.status !== 202 && res.status !== 409) throw new Error(`HTTP ${res.status}`);
+      const next = upsertReport(mingzhu, {
+        key: mingzhu.id,
+        title: bookTitle(reportStyle),
+        kind: 'book',
+        createdAt: new Date().toISOString(),
+      });
+      onUpdate(next);
+      void saveMingzhu(next);
       setRs({ status: 'running', done: 0, total: chapters.length });
       setPollTick((t) => t + 1); // 重啟輪詢
     } catch (e) {

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type CSSProperties, type MouseEvent as Re
 import { cast } from './engine/cast';
 import type { BirthInput } from './engine/types';
 import Sidebar from './components/Sidebar';
+import HomeIntro from './components/HomeIntro';
 import MingzhuModal from './components/MingzhuModal';
 import SettingsModal from './components/SettingsModal';
 import ChatPanel from './components/ChatPanel';
@@ -127,6 +128,12 @@ export default function App() {
     setActiveConvId(null); // 中欄回到歷史列表視圖
   };
 
+  /** 回首頁：取消命主選取，中欄顯示介紹頁 */
+  const goHome = () => {
+    setActiveId(null);
+    setActiveConvId(null);
+  };
+
   const addMingzhu = async (name: string, b: BirthInput) => {
     const m: Mingzhu = {
       id: newId('m'),
@@ -211,6 +218,7 @@ export default function App() {
         onSelectConv={setActiveConvId}
         onDeleteConv={removeConv}
         onOpenSettings={() => setSettingsOpen(true)}
+        onHome={goHome}
       />
       <div className="col-resizer" onMouseDown={startResize('sb')} />
 
@@ -232,9 +240,7 @@ export default function App() {
             onUpdate={updateMingzhu}
           />
         ) : (
-          <div className="empty">
-            尚未選擇命主。點左側「＋ 新增命主」建立，或從清單選擇後排盤、分析與問答。
-          </div>
+          <HomeIntro onAdd={() => setModalOpen(true)} />
         )}
       </main>
 
@@ -249,6 +255,7 @@ export default function App() {
             mingzhu={mingzhu}
             result={result}
             simple={settings.chartMode === 'simple'}
+            onUpdate={updateMingzhu}
           />
         ) : (
           <div className="empty">選擇命主後顯示盤面與分析。</div>
