@@ -3,8 +3,9 @@ import react from '@vitejs/plugin-react'
 import analyzePlugin from './server/analyzePlugin.js'
 import storagePlugin from './server/storagePlugin.js'
 import reportPlugin from './server/reportPlugin.js'
+import aiTestPlugin from './server/aiTestPlugin.js'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), analyzePlugin(), storagePlugin(), reportPlugin()],
+  plugins: [react(), analyzePlugin(), storagePlugin(), reportPlugin(), aiTestPlugin()],
 })
