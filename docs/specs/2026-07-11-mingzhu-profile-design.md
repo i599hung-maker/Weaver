@@ -27,6 +27,12 @@
 - `buildBookChapters`（`src/analysis/reportBook.ts`）同樣加選填 `profile` 參數，插入同一節到每章共用的盤面事實區。
 - 未填（undefined／空白字串）時完全不插入，prompt 與現行為完全相同。
 
+## 後續調整（同日）
+
+- 卡片**預設展開**（進入命主即可見），可手動收合。
+- 建議字數 **500 字**（`SUGGESTED_MAX`）：自述會進每次聊天與命書九章 prompt，精煉優於冗長；hint 文案註明。
+- 左下角字數計 `n/500`：超過變黃色（`.pc-count.over`）並帶提示 tooltip，**不阻擋儲存**，純建議。
+
 ## 測試
 
 - chatPrompt：有 profile 時 prompt 含【命主自述背景】與原文；無／空白時不含。

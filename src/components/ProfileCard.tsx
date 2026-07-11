@@ -7,9 +7,12 @@ interface Props {
   onUpdate: (m: Mingzhu) => void;
 }
 
-/** 中欄標題下的個人背景卡片：收合一行摘要，展開為 textarea＋建議小字 */
+/** 建議字數上限（純建議，超過仍可儲存）：自述會進每次聊天與命書九章 prompt，精煉優於冗長 */
+const SUGGESTED_MAX = 500;
+
+/** 中欄標題下的個人背景卡片：收合一行摘要，展開為 textarea＋建議小字＋字數計 */
 export default function ProfileCard({ mingzhu, onUpdate }: Props) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const [draft, setDraft] = useState(mingzhu.profile ?? '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -68,10 +71,16 @@ export default function ProfileCard({ mingzhu, onUpdate }: Props) {
       />
       <div className="pc-hint">
         💡 建議可寫：職業與工作現況、感情／婚姻狀況、最想了解的事、重大事件與年份（如 2018
-        換工作、2021 結婚）——寫得越具體，解讀越貼近你
+        換工作、2021 結婚）——寫得越具體，解讀越貼近你。建議 {SUGGESTED_MAX} 字內，精煉比冗長更有效。
       </div>
       {error && <div className="pc-error">儲存失敗：{error}</div>}
       <div className="pc-actions">
+        <span
+          className={`pc-count${draft.length > SUGGESTED_MAX ? ' over' : ''}`}
+          title={draft.length > SUGGESTED_MAX ? '超過建議字數，仍可儲存；精簡有助 AI 抓重點' : '建議字數'}
+        >
+          {draft.length}/{SUGGESTED_MAX}
+        </span>
         <button onClick={() => setOpen(false)}>收合</button>
         <button className="primary" disabled={saving} onClick={() => void save()}>
           {saving ? '儲存中…' : '儲存'}

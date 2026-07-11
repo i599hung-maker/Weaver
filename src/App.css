@@ -1578,3 +1578,15 @@ footer {
   justify-content: flex-end;
   gap: 8px;
 }
+
+/* 個人背景字數計：建議 500 字內，超過黃色提醒但不擋 */
+.pc-count {
+  margin-right: auto;
+  align-self: center;
+  font-size: 12px;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+.pc-count.over {
+  color: #e6b800;
+}
