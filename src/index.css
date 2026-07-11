@@ -18,6 +18,7 @@
   --primary: #ececec;
   --primary-fg: #131314;
   --radius: 12px;
+  --headbar-h: 54px; /* 三欄頂部標題列統一高度：底線對齊 */
 
   /* ── 盤面資訊色（星曜／凶吉／流曜），非 UI 裝飾 ── */
   --major: #8ab4ff;
