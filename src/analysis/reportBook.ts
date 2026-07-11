@@ -4,6 +4,7 @@ import type { ChartAnalysis } from './analysis';
 import type { Topic } from './facts';
 import { groupDesc, headerDesc, type ReportChapterSpec } from './reportPrompts';
 import { profileSection, styleSection, type ReportStyle } from './chatPrompt';
+import { TONE_RULE } from './tone';
 
 /**
  * 視覺化命書（book v2）資料組裝（純函式，瀏覽器端用）：
@@ -180,7 +181,9 @@ export function buildBookData(result: CastResult, analysis: ChartAnalysis, curre
 const JSON_RULE = `【輸出要求】
 1. 只輸出一個 JSON 物件（第一個字元是 {、最後一個字元是 }），不要 code fence、不要任何其他文字或說明。
 2. 繁體中文，占驗派語氣專業但白話；字串值內可用 **粗體** 標重點，禁止其他 markdown 與 HTML。
-3. 只能根據上面提供的盤面事實，不得自行安星，不得推算或新增年份。`;
+3. 只能根據上面提供的盤面事實，不得自行安星，不得推算或新增年份。
+
+${TONE_RULE}`;
 
 /** 四主題宮位簡表 */
 function topicBrief(book: BookData): string {

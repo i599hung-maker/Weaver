@@ -8,6 +8,7 @@ import { aiRequestParams, loadSettings } from '../store/settings';
 import { questionTitle, upsertReport } from '../store/reportList';
 import ProfileCard from './ProfileCard';
 import ReportsCard from './ReportsCard';
+import ConfirmModal, { type ConfirmRequest } from './ConfirmModal';
 import {
   newId,
   saveMingzhu,
@@ -158,8 +159,11 @@ export default function ChatPanel({ mingzhu, result, activeConvId, onSelectConv,
   const analysis = useMemo(() => buildAnalysis(result), [result]);
   const [input, setInput] = useState('');
   const [mode, setMode] = useState<Mode>('chat');
-  const [sending, setSending] = useState(false);
+  /** 等待回覆中的對話 id：思考中提示只顯示在發問的那個對話 */
+  const [sendingConvId, setSendingConvId] = useState<string | null>(null);
+  const sending = sendingConvId !== null;
   const [error, setError] = useState<string | null>(null);
+  const [confirm, setConfirm] = useState<ConfirmRequest | null>(null);
   const msgsRef = useRef<HTMLDivElement>(null);
 
   const activeConv = mingzhu.conversations.find((c) => c.id === activeConvId) ?? null;
@@ -171,7 +175,7 @@ export default function ChatPanel({ mingzhu, result, activeConvId, onSelectConv,
 
   /** 呼叫 /api/analyze 取得回覆並存檔；conv 的最後一則必須是 user 訊息 */
   const ask = async (base: Mingzhu, conv: Conversation) => {
-    setSending(true);
+    setSendingConvId(conv.id);
     setError(null);
     try {
       const last = conv.messages[conv.messages.length - 1];
@@ -192,14 +196,20 @@ export default function ChatPanel({ mingzhu, result, activeConvId, onSelectConv,
         // 產生單題報告頁；失敗就退回純文字訊息，不擋對話
         const key = `q_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
         try {
+          // 標題用 AI 生成的「# 報告標題」（提示詞要求的第一行），原始提問改放標題下方小字
+          const m = data.text.match(/^#\s+(.+)$/m);
+          const aiTitle = m?.[1].trim() ?? '';
+          const title = aiTitle || question.slice(0, 30);
+          const markdown = m ? data.text.replace(m[0], '').trimStart() : data.text;
           const rr = await fetch(`/api/report/${key}/render`, {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({
-              title: question.slice(0, 30),
+              title,
               name: base.name,
               header: buildReportHeader(analysis, result.meta),
-              sections: [{ title: question, markdown: data.text }],
+              question,
+              sections: [{ title: '', markdown }], // 標題已在 hero 顯示，章節列留空避免重複
             }),
           });
           if (!rr.ok) throw new Error(`HTTP ${rr.status}`);
@@ -223,7 +233,7 @@ export default function ChatPanel({ mingzhu, result, activeConvId, onSelectConv,
     } catch (e) {
       setError((e as Error).message);
     } finally {
-      setSending(false);
+      setSendingConvId(null);
     }
   };
 
@@ -254,7 +264,6 @@ export default function ChatPanel({ mingzhu, result, activeConvId, onSelectConv,
   };
 
   const removeConv = async (id: string) => {
-    if (!window.confirm('刪除此對話？')) return;
     const next: Mingzhu = {
       ...mingzhu,
       conversations: mingzhu.conversations.filter((c) => c.id !== id),
@@ -337,7 +346,7 @@ export default function ChatPanel({ mingzhu, result, activeConvId, onSelectConv,
                         className="rr-del"
                         title="刪除對話"
                         disabled={sending}
-                        onClick={() => void removeConv(c.id)}
+                        onClick={() => setConfirm({ text: '刪除此對話？', okLabel: '刪除', onOk: () => void removeConv(c.id) })}
                       >
                         <Trash2 size={13} strokeWidth={1.8} />
                       </button>
@@ -359,15 +368,15 @@ export default function ChatPanel({ mingzhu, result, activeConvId, onSelectConv,
           )}
           {askBox(true)}
         </div>
+        <ConfirmModal req={confirm} onClose={() => setConfirm(null)} />
       </div>
     );
   }
 
-  /* ── 對話串視圖 ── */
+  /* ── 對話串視圖：純對話，個人背景只在命主總覽顯示 ── */
   return (
     <div className="chat-col">
       {chatHead}
-      <ProfileCard mingzhu={mingzhu} onUpdate={onUpdate} />
       <div className="thread">
         <div className="chat-msgs" ref={msgsRef}>
           {activeConv.messages.map((msg, i) => {
@@ -402,7 +411,9 @@ export default function ChatPanel({ mingzhu, result, activeConvId, onSelectConv,
               </div>
             );
           })}
-          {sending && <div className="chat-wait">Claude 思考中…（本機 headless，可能數分鐘）</div>}
+          {sendingConvId === activeConv.id && (
+            <div className="chat-wait">Claude 思考中…（本機 headless，可能數分鐘）</div>
+          )}
         </div>
 
         {error && (

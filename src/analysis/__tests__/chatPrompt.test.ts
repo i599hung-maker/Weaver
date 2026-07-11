@@ -123,22 +123,23 @@ describe('個人背景 profile', () => {
   });
 });
 
-describe('命書風格 style', () => {
+describe('回覆風格 style（聊天與報告一體適用）', () => {
   it('report＋plain 時含白話風格段', () => {
     const prompt = buildChatPrompt(analysis, [], '問題', 2026, 'report', undefined, 'plain');
     expect(prompt).toContain('【寫作風格：白話】');
     expect(prompt).toContain('像跟朋友喝咖啡聊天');
   });
 
-  it('report＋classic 與未傳時不含風格段且輸出一致', () => {
+  it('chat＋plain 時同樣含白話風格段', () => {
+    const prompt = buildChatPrompt(analysis, [], '問題', 2026, 'chat', undefined, 'plain');
+    expect(prompt).toContain('【寫作風格：白話】');
+  });
+
+  it('classic 與未傳時不含風格段且輸出一致', () => {
     const classic = buildChatPrompt(analysis, [], '問題', 2026, 'report', undefined, 'classic');
     const none = buildChatPrompt(analysis, [], '問題', 2026, 'report');
     expect(classic).not.toContain('【寫作風格');
     expect(classic).toBe(none);
-  });
-
-  it('chat 模式即使 plain 也不含風格段', () => {
-    const prompt = buildChatPrompt(analysis, [], '問題', 2026, 'chat', undefined, 'plain');
-    expect(prompt).not.toContain('【寫作風格');
+    expect(buildChatPrompt(analysis, [], '問題', 2026, 'chat', undefined, 'classic')).not.toContain('【寫作風格');
   });
 });

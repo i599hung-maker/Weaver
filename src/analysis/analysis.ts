@@ -1,6 +1,7 @@
 import type { CastResult } from '../engine/cast';
 import { buildTopicFacts, topicBranches, TOPICS, type Topic, type TopicFacts } from './facts';
 import { buildTriggers, type DecadalAnalysis } from './trigger';
+import { TONE_RULE } from './tone';
 
 export interface ChartAnalysis {
   header: {
@@ -117,7 +118,9 @@ ${decadalDesc}
 2. 先講本質：以三方四正星曜組合論此主題的格局、優勢、隱憂（引用具體星曜與亮度、生年四化）。
 3. 再分大限：挑出對此主題最重要的 2~3 個大限，說明原因。
 4. 最後列重點年份：從引動年份中挑最值得注意的（權重高、多重引動優先），每一年都要寫出完整原因鏈——「看到什麼（星＋宮＋四化）→ 所以推論什麼 → 該年該注意／把握什麼」。
-5. 用繁體中文，語氣專業但白話，條理分明用 markdown 標題與清單。全文 800~1200 字，不要免責聲明。`;
+5. 用繁體中文，語氣專業但白話，條理分明用 markdown 標題與清單。全文 800~1200 字，不要免責聲明。
+
+${TONE_RULE}`;
 }
 
 export { TOPICS };

@@ -41,11 +41,11 @@
 }
 
 .sidebar {
-  width: var(--sb-w, 250px);
+  width: 250px; /* 固定寬，不可拖曳 */
   flex-shrink: 0;
   height: 100%;
   overflow-y: auto;
-  background: rgba(22, 22, 24, 0.72); /* 深色單色＋alpha，透出星空 */
+  background: var(--glass-sidebar); /* 半透明，透出星空 */
   border-right: 1px solid var(--border);
   padding: 14px 12px;
   display: flex;
@@ -880,7 +880,7 @@ footer {
 
 /* 斷應期權重資訊色（保留，非 UI 裝飾） */
 .a-year.w3 { border-color: #8a6d1a; }
-.a-year.w4, .a-year.w5, .a-year.w6 { border-color: #caa53d; background: #26200f; }
+.a-year.w4, .a-year.w5, .a-year.w6 { border-color: #caa53d; } /* 重點卡只加金框，底色同面板 */
 
 .a-hit {
   font-size: 10px;
@@ -1309,7 +1309,7 @@ footer {
   height: var(--headbar-h);
   margin: 0 -14px 12px;
   padding: 0 14px;
-  background: rgba(19, 19, 20, 0.85); /* sticky 蓋過捲動內容，半透明＋模糊 */
+  background: var(--glass-bar); /* 同欄身視覺色；sticky 蓋過捲動內容 */
   backdrop-filter: blur(8px);
   border-bottom: 1px solid transparent; /* 隱藏但保留佔位，高度對齊不變 */
 }
@@ -1574,6 +1574,7 @@ footer {
   width: 100%;
   resize: vertical;
   min-height: 90px;
+  padding: 10px; /* 上下與左右同距（全域預設 4px 10px 太擠） */
 }
 .pc-hint {
   font-size: 12px;
@@ -1692,11 +1693,12 @@ footer {
 
 .home-lede {
   margin: 0 0 32px;
-  max-width: 400px;
+  max-width: 480px;
   text-align: center;
   color: var(--text-2);
   font-size: 14px;
   line-height: 1.8;
+  white-space: pre-line; /* 副標三行斷句 */
 }
 
 .home-features {
@@ -1719,7 +1721,7 @@ footer {
   padding: 14px 16px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  background: rgba(28, 28, 31, 0.6); /* 同 --bg-panel 帶 alpha，透出星空 */
+  background: var(--glass-card); /* 半透明面板色，透出星空 */
 }
 
 .home-feature-icon {
@@ -1754,7 +1756,8 @@ footer {
 }
 
 .home-note-label {
-  font-family: 'Kaiti TC', 'BiauKai', 'DFKai-SB', serif;
+  font-family: 'PingFang TC', 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
+  font-weight: 400;
   color: var(--gold);
   opacity: 0.85;
   margin-right: 8px;
@@ -1845,4 +1848,189 @@ footer {
 }
 .rr-actions .rr-del:hover:not(:disabled) {
   color: var(--malefic);
+}
+
+/* 個人背景卡片：檢視／編輯兩態（編輯才開 textarea） */
+.pc-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.pc-title {
+  font-size: 13px;
+  color: var(--text-2);
+}
+.pc-edit {
+  font-size: 11.5px;
+  padding: 3px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: none;
+  color: var(--text-2);
+}
+.pc-edit:hover {
+  color: var(--text);
+  background: var(--bg-hover);
+}
+.pc-text {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--text);
+  white-space: pre-wrap;
+  line-height: 1.7;
+}
+.pc-empty {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-3);
+}
+
+/* ── 設定頁：兩欄（左導覽｜右內容）──────────── */
+.settings-card {
+  position: relative;
+  flex-direction: row;
+  gap: 0;
+  padding: 0;
+  width: min(720px, calc(100vw - 32px));
+  height: min(500px, calc(100vh - 64px));
+  overflow: hidden;
+}
+
+.sm-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: inline-flex;
+  border: none;
+  background: none;
+  color: var(--text-2);
+  padding: 6px;
+  border-radius: 8px;
+}
+
+.sm-close:hover {
+  background: var(--bg-hover);
+  color: var(--text);
+}
+
+.sm-nav {
+  width: 190px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 18px 12px;
+  border-right: 1px solid var(--border);
+}
+
+.sm-nav h2 {
+  font-size: 17px;
+  margin: 0 6px 12px;
+  color: var(--text);
+}
+
+.sm-nav button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: none;
+  background: transparent;
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: var(--text-2);
+  font-size: 14px;
+  text-align: left;
+}
+
+.sm-nav button:hover {
+  background: var(--bg-hover);
+  color: var(--text);
+}
+
+.sm-nav button.on {
+  background: var(--bg-active);
+  color: var(--text);
+}
+
+.sm-body {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  padding: 20px 26px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sm-title {
+  margin: 0 0 6px;
+  font-size: 15px;
+  color: var(--text);
+}
+
+/* 關於 Weaver */
+.sm-brand {
+  margin: 0;
+  font-family: 'Kaiti TC', 'BiauKai', 'DFKai-SB', serif;
+  font-size: 24px;
+  letter-spacing: 1px;
+  color: var(--text);
+}
+
+.sm-tagline {
+  margin: 2px 0 10px;
+  color: var(--text-2);
+  font-size: 13.5px;
+  line-height: 1.9;
+  white-space: pre-line; /* 副標三行斷句 */
+}
+
+.sm-mission {
+  margin: 0 0 8px;
+  color: var(--text-2);
+  font-size: 13.5px;
+  line-height: 1.9;
+}
+
+.sm-fineprint {
+  margin: 10px 0 0;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+  color: var(--text-3);
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+/* 窄螢幕：導覽收成頂部橫列 */
+@media (max-width: 560px) {
+  .settings-card {
+    flex-direction: column;
+    height: min(600px, calc(100vh - 32px));
+  }
+  .sm-nav {
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    padding: 12px;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+  .sm-nav h2 {
+    margin: 0 8px 0 4px;
+  }
+  .sm-nav button span {
+    white-space: nowrap;
+  }
+}
+
+/* 確認彈窗：取代原生 window.confirm */
+.confirm-card {
+  max-width: 360px;
+}
+.confirm-card .cf-text {
+  margin: 0 0 14px;
+  font-size: 14.5px;
+  color: var(--text);
+  line-height: 1.8;
 }

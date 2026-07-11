@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { BookOpen, Download, LoaderCircle, Trash2 } from 'lucide-react';
 import { saveMingzhu, type Mingzhu, type ReportMeta } from '../store/mingzhu';
 import { mergeReports, type BookStatusInfo } from '../store/reportList';
+import { loadSettings } from '../store/settings';
+import ConfirmModal, { type ConfirmRequest } from './ConfirmModal';
 
 interface Props {
   mingzhu: Mingzhu;
@@ -19,6 +21,7 @@ export default function ReportsCard({ mingzhu, onUpdate }: Props) {
   const [bookStatus, setBookStatus] = useState<BookStatusInfo>({ done: false });
   const [busy, setBusy] = useState<string | null>(null); // `${key}:${format}` 或 `${key}:del`
   const [error, setError] = useState<string | null>(null);
+  const [confirm, setConfirm] = useState<ConfirmRequest | null>(null);
 
   useEffect(() => {
     let stop = false;
@@ -43,10 +46,17 @@ export default function ReportsCard({ mingzhu, onUpdate }: Props) {
     setBusy(`${r.key}:${format}`);
     setError(null);
     try {
+      // 配色：優先用報告頁自己切過的，否則跟 app 設定
+      let theme: string | null = null;
+      try {
+        theme = localStorage.getItem('zhanyan-report-theme') ?? loadSettings().theme;
+      } catch {
+        /* ignore */
+      }
       const res = await fetch(`/api/report/${r.key}/export`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ format }),
+        body: JSON.stringify({ format, theme }),
       });
       if (!res.ok) {
         const data = (await res.json().catch(() => null)) as { error?: string } | null;
@@ -66,7 +76,6 @@ export default function ReportsCard({ mingzhu, onUpdate }: Props) {
   };
 
   const remove = async (r: ReportMeta) => {
-    if (!window.confirm(`刪除「${r.title}」？報告檔會一併移除。`)) return;
     setBusy(`${r.key}:del`);
     setError(null);
     try {
@@ -112,12 +121,20 @@ export default function ReportsCard({ mingzhu, onUpdate }: Props) {
                 {f.toUpperCase()}
               </button>
             ))}
-            <button className="rr-del" disabled={busy !== null} title="刪除" onClick={() => void remove(r)}>
+            <button
+              className="rr-del"
+              disabled={busy !== null}
+              title="刪除"
+              onClick={() =>
+                setConfirm({ text: `刪除「${r.title}」？報告檔會一併移除。`, okLabel: '刪除', onOk: () => void remove(r) })
+              }
+            >
               {busy === `${r.key}:del` ? <LoaderCircle size={13} className="spin" /> : <Trash2 size={13} strokeWidth={1.8} />}
             </button>
           </span>
         </div>
       ))}
+      <ConfirmModal req={confirm} onClose={() => setConfirm(null)} />
     </div>
   );
 }

@@ -38,6 +38,8 @@ interface RenderBody {
   name: string;
   header: ReportHeader;
   sections: ReportSection[];
+  /** 原始提問：報告頁標題下方的小字 */
+  question?: string;
 }
 
 interface StatusFile {
@@ -187,6 +189,7 @@ function handleRender(key: string, raw: string, res: ServerResponse): void {
     header: body.header,
     sections: body.sections,
     generatedAt: nowLabel(),
+    question: typeof body.question === 'string' ? body.question : undefined,
   });
   ensureDir();
   writeFileSync(htmlPath(key), html);
@@ -232,7 +235,7 @@ export function handleDeleteReport(key: string): void {
 /** Playwright 輸出：jpg＝整頁長圖、pdf＝A4 含背景。reducedMotion 讓模板進場動畫區塊直接顯示 */
 async function handleExport(key: string, raw: string, res: ServerResponse): Promise<void> {
   if (!existsSync(htmlPath(key))) return sendJson(res, 404, { error: '找不到報告' });
-  const { format } = JSON.parse(raw || '{}') as { format?: string };
+  const { format, theme } = JSON.parse(raw || '{}') as { format?: string; theme?: string };
   if (format !== 'jpg' && format !== 'pdf') return sendJson(res, 400, { error: 'format 需為 jpg 或 pdf' });
   const { chromium } = await import('playwright');
   const browser = await chromium.launch();
@@ -242,7 +245,12 @@ async function handleExport(key: string, raw: string, res: ServerResponse): Prom
       viewport: { width: 960, height: 1200 },
       deviceScaleFactor: format === 'jpg' ? 2 : 1,
     });
+    // 配色跟著 app 設定走（file:// 讀不到 app 的 localStorage，先注入）
+    if (theme === 'gray' || theme === 'mauve' || theme === 'purple') {
+      await page.addInitScript(`document.documentElement.dataset.theme=${JSON.stringify(theme)}`);
+    }
     await page.goto(`file://${htmlPath(key)}`, { waitUntil: 'networkidle' });
+    await page.evaluate(`document.querySelector('.theme-pick')?.remove()`); // 切換器不入圖
     const buf =
       format === 'jpg'
         ? await page.screenshot({ fullPage: true, type: 'jpeg', quality: 90 })

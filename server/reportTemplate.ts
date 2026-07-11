@@ -189,44 +189,24 @@ export function markdownToHtml(md: string): string {
 /* ---------- 報告版型 ---------- */
 
 const CSS = `
-  :root {
-    --bg: #16120d;
-    --bg-panel: #1f1913;
-    --ink: #e9dfcc;
-    --ink-dim: #b8a98c;
-    --gold: #c9a35c;
-    --gold-bright: #e3c27e;
-    --line: #3a3020;
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  html { -webkit-text-size-adjust: 100%; }
-  body {
-    background: var(--bg);
-    background-image: radial-gradient(1200px 500px at 50% -100px, #2a2115 0%, var(--bg) 70%);
-    color: var(--ink);
-    font-family: "Noto Serif TC", "Songti TC", "PMingLiU", serif;
-    line-height: 1.9;
-    font-size: 16px;
-  }
-  .page { max-width: 860px; margin: 0 auto; padding: 48px 28px 64px; }
-  /* hero */
+  .page { position: relative; z-index: 1; max-width: 860px; margin: 0 auto; padding: 24px 28px 64px; }
+  /* hero：命書同語彙（宋體 900 金字＋金色細線） */
   .hero { text-align: center; padding: 56px 16px 40px; border-bottom: 1px solid var(--line); }
+  .hero .eyebrow { font-family: var(--serif); letter-spacing: .55em; font-size: 14px; color: var(--gold); text-indent: .55em; margin-bottom: 14px; }
   .hero .title {
-    font-family: "Kaiti TC", "BiauKai", "DFKai-SB", "Noto Serif TC", serif;
-    font-size: 52px;
-    letter-spacing: 0.18em;
-    color: var(--gold-bright);
-    text-shadow: 0 2px 18px rgba(201, 163, 92, 0.25);
-    font-weight: 700;
+    font-family: var(--serif);
+    font-weight: 900;
+    font-size: clamp(28px, 5vw, 44px);
+    line-height: 1.4;
+    letter-spacing: .08em;
+    color: var(--gold-br);
+    text-shadow: 0 0 28px rgba(201, 162, 75, .3);
   }
-  .hero .name {
-    margin-top: 18px;
-    font-size: 22px;
-    letter-spacing: 0.3em;
-    color: var(--ink);
-  }
+  .hero .question { margin: 14px auto 0; max-width: 620px; font-size: 14px; color: var(--silk-dim); line-height: 1.9; }
+  .hero .question b { color: var(--gold); font-weight: 400; font-family: var(--serif); margin-right: 8px; letter-spacing: .2em; }
+  .hero .name { margin-top: 16px; font-family: var(--serif); font-size: 19px; letter-spacing: .3em; color: var(--silk); }
   .hero .name::before, .hero .name::after { content: "・"; color: var(--gold); }
-  .hero-rule { width: 120px; height: 2px; margin: 26px auto 0; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
+  .hero-rule { width: 120px; height: 2px; margin: 24px auto 0; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
   /* header info grid */
   .meta {
     display: grid;
@@ -234,62 +214,60 @@ const CSS = `
     gap: 12px;
     margin: 32px 0 8px;
   }
-  .meta .cell {
-    background: var(--bg-panel);
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    padding: 10px 14px;
-  }
-  .meta .k { font-size: 12px; letter-spacing: 0.2em; color: var(--gold); }
-  .meta .v { margin-top: 2px; font-size: 15px; color: var(--ink); }
+  .meta .cell { background: var(--card); border: 1px solid var(--line); border-radius: 4px; padding: 10px 14px; }
+  .meta .k { font-size: 12px; letter-spacing: 0.2em; color: var(--gold); font-family: var(--serif); }
+  .meta .v { margin-top: 2px; font-size: 15px; color: var(--silk); }
   /* sections */
   .section { margin-top: 56px; }
   .section > .chapter {
-    font-family: "Kaiti TC", "BiauKai", "DFKai-SB", "Noto Serif TC", serif;
-    font-size: 30px;
-    letter-spacing: 0.14em;
-    color: var(--gold-bright);
+    font-family: var(--serif);
+    font-weight: 900;
+    font-size: 26px;
+    letter-spacing: 0.1em;
+    color: var(--gold-br);
     padding-left: 14px;
-    border-left: 4px solid var(--gold);
+    border-left: 3px solid var(--gold);
     margin-bottom: 20px;
   }
+  .section .body { font-size: 15.5px; }
   .section .body h1, .section .body h2, .section .body h3, .section .body h4 {
-    color: var(--gold);
+    font-family: var(--serif);
+    color: var(--gold-br);
     letter-spacing: 0.06em;
     margin: 26px 0 10px;
     line-height: 1.5;
   }
-  .section .body h1 { font-size: 24px; }
-  .section .body h2 { font-size: 21px; }
-  .section .body h3 { font-size: 18px; }
-  .section .body h4 { font-size: 16px; }
+  .section .body h1 { font-size: 23px; font-weight: 900; }
+  .section .body h2 { font-size: 20px; font-weight: 900; }
+  .section .body h3 { font-size: 17.5px; font-weight: 700; }
+  .section .body h4 { font-size: 16px; font-weight: 700; }
   .section .body p { margin: 12px 0; }
   .section .body ul, .section .body ol { margin: 12px 0 12px 1.6em; }
   .section .body li { margin: 4px 0; }
   .section .body li > ul, .section .body li > ol { margin: 4px 0 4px 1.4em; }
-  .section .body strong { color: var(--gold-bright); }
+  .section .body strong { color: var(--gold-br); }
   .section .body code {
     font-family: ui-monospace, "SF Mono", Menlo, monospace;
     font-size: 0.9em;
-    background: var(--bg-panel);
+    background: var(--card);
     border: 1px solid var(--line);
     border-radius: 4px;
     padding: 1px 6px;
-    color: var(--gold-bright);
+    color: var(--gold-br);
   }
   .section .body blockquote {
     border-left: 3px solid var(--gold);
-    background: var(--bg-panel);
+    background: var(--card);
     padding: 10px 16px;
     margin: 14px 0;
-    color: var(--ink-dim);
+    color: var(--silk-dim);
   }
   .section .body blockquote p { margin: 0; }
   .section .body hr { border: 0; height: 1px; background: var(--line); margin: 26px 0; }
   .table-wrap { overflow-x: auto; margin: 14px 0; }
   .section .body table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
   .section .body th, .section .body td { border: 1px solid var(--line); padding: 8px 12px; text-align: left; }
-  .section .body th { color: var(--gold); background: var(--bg-panel); letter-spacing: 0.08em; white-space: nowrap; }
+  .section .body th { color: var(--gold); background: var(--card); letter-spacing: 0.08em; white-space: nowrap; font-family: var(--serif); }
   /* footer */
   .footer {
     margin-top: 64px;
@@ -297,15 +275,16 @@ const CSS = `
     border-top: 1px solid var(--line);
     text-align: center;
     font-size: 12px;
-    color: var(--ink-dim);
+    color: var(--silk-dim);
     letter-spacing: 0.1em;
   }
   /* print */
   @media print {
-    body { background: #fff; background-image: none; color: #1c1710; font-size: 12.5px; }
+    body { background: #fff !important; color: #1c1710; font-size: 12.5px; }
     .page { max-width: none; padding: 0; }
     .hero .title { color: #7a5c1e; text-shadow: none; }
     .hero .name, .meta .v { color: #1c1710; }
+    .hero .question { color: #4a4232; }
     .meta .cell, .section .body code, .section .body blockquote, .section .body th { background: #fff; }
     .meta .cell, .section .body th, .section .body td, .section .body code { border-color: #c9b98f; }
     .meta .k, .section > .chapter, .section .body h1, .section .body h2, .section .body h3, .section .body h4,
@@ -405,23 +384,40 @@ function fallbackBlock(title: string, chapter: unknown): string {
   return `<div class="sys"><div class="syshead"><h2>${escapeHtml(title)}</h2></div><div class="read in">${markdownToHtml(md)}</div></div>`;
 }
 
-/* ---------- 版型 CSS／script（原樣移植 huang-1994-full.html） ---------- */
+/* ---------- 版型 CSS／script（版型源自 huang-1994-full.html；配色 token 命書與單題報告共用） ---------- */
 
-const BOOK_CSS = `
+/** 共用主題層：色票 token（星空紫／藕紫／灰黑）＋星空底＋右上角切換器 */
+const THEME_CSS = `
   :root{
     --ink:#17101f; --ink-2:#1e1530; --ink-3:#281c3e;
     --gold:#c9a24b; --gold-br:#e7cb84;
     --cinnabar:#d24b3b; --jade:#6fae93; --azure:#6f9fd0;
     --silk:#ece3d2; --silk-dim:#9f937f;
     --line:rgba(201,162,75,.22);
-    --serif:"Noto Serif TC",serif; --sans:"Noto Sans TC",sans-serif; --brush:"Ma Shan Zheng",cursive;
+    /* 配色 token：預設紫色（命書墨紫），可切藕紫／灰黑 */
+    --veil-a:#2a1c44; --veil-b:#25183a;
+    --card:rgba(30,21,48,.5); --card-2:rgba(40,28,62,.4);
+    --ming-a:#33244e; --ming-b:#241734; --core-g:#2c1d49;
+    --serif:"Noto Serif TC",serif; --sans:"Noto Sans TC",sans-serif; --brush:"Noto Serif TC",serif; /* 手寫體繁中缺字會掉字，改用宋體 */
+  }
+  :root[data-theme='gray']{
+    --ink:#131314; --ink-2:#1c1c1f; --ink-3:#232327;
+    --veil-a:#202023; --veil-b:#1b1b1e;
+    --card:rgba(28,28,31,.55); --card-2:rgba(35,35,39,.45);
+    --ming-a:#2a2a2e; --ming-b:#1c1c1f; --core-g:#232327;
+  }
+  :root[data-theme='mauve']{
+    --ink:#332b36; --ink-2:#3d3441; --ink-3:#463c4a;
+    --veil-a:#4a3a50; --veil-b:#413347;
+    --card:rgba(61,52,65,.55); --card-2:rgba(70,60,74,.45);
+    --ming-a:#4f4454; --ming-b:#3d3441; --core-g:#463c4a;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html{scroll-behavior:smooth}
   body{
     background:
-      radial-gradient(1200px 800px at 50% -10%, #2a1c44 0%, rgba(42,28,68,0) 55%),
-      radial-gradient(900px 700px at 85% 18%, #25183a 0%, rgba(37,24,58,0) 60%),
+      radial-gradient(1200px 800px at 50% -10%, var(--veil-a) 0%, transparent 55%),
+      radial-gradient(900px 700px at 85% 18%, var(--veil-b) 0%, transparent 60%),
       var(--ink);
     color:var(--silk); font-family:var(--sans); line-height:1.9; letter-spacing:.02em;
     -webkit-font-smoothing:antialiased; overflow-x:hidden;
@@ -429,20 +425,38 @@ const BOOK_CSS = `
   .sky{position:fixed; inset:0; z-index:0; pointer-events:none}
   .sky i{position:absolute; border-radius:50%; background:var(--gold-br); opacity:0; animation:tw 6s infinite ease-in-out}
   @keyframes tw{0%,100%{opacity:0}50%{opacity:.7}}
+  /* 右上角配色切換＋下載：列印時隱藏 */
+  .theme-pick{position:fixed; top:14px; right:14px; z-index:9; display:flex; gap:8px; padding:7px 10px;
+    border:1px solid var(--line); border-radius:20px; background:var(--card); backdrop-filter:blur(6px)}
+  .theme-pick button{width:18px; height:18px; border-radius:50%; padding:0; cursor:pointer;
+    border:1px solid rgba(236,227,210,.35)}
+  .theme-pick button.on{box-shadow:0 0 0 2px var(--gold)}
+  .theme-pick .t-purple{background:#1e1530}
+  .theme-pick .t-mauve{background:#3d3441}
+  .theme-pick .t-gray{background:#1c1c1f}
+  .theme-pick .tp-sep{width:1px; align-self:stretch; background:var(--line); margin:0 2px}
+  .theme-pick .tp-dl{width:auto; height:18px; border-radius:9px; padding:0 8px; font-size:11px; line-height:1;
+    font-family:var(--sans); color:var(--silk); background:transparent; border:1px solid var(--line); cursor:pointer}
+  .theme-pick .tp-dl:hover{border-color:var(--gold); color:var(--gold-br)}
+  .theme-pick .tp-dl:disabled{opacity:.5; cursor:default}
+  @media print{ .theme-pick{display:none} .sky{display:none} }
+`;
+
+const BOOK_CSS = `
   .wrap{position:relative; z-index:1; max-width:940px; margin:0 auto; padding:0 22px}
 
   /* ---------- hero ---------- */
   header{padding:72px 0 18px; text-align:center}
   .eyebrow{font-family:var(--serif); letter-spacing:.55em; font-size:15px; color:var(--gold); text-indent:.55em}
-  .title{font-family:var(--brush); font-size:clamp(62px,13vw,116px); line-height:1; color:var(--gold-br);
-    margin:14px 0 8px; text-shadow:0 0 34px rgba(201,162,75,.32)}
+  .title{font-family:var(--serif); font-weight:900; font-size:clamp(56px,11vw,104px); line-height:1.15; color:var(--gold-br);
+    letter-spacing:.08em; margin:14px 0 8px; text-shadow:0 0 34px rgba(201,162,75,.32)}
   .sub{font-family:var(--serif); color:var(--silk-dim); font-size:17px; letter-spacing:.16em}
   .sub b{color:var(--silk); font-weight:600}
   .note{font-size:12px; color:var(--silk-dim); letter-spacing:.06em; margin-top:8px; opacity:.8}
 
   .tri{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:34px 0 8px}
   .tri a{display:block; text-decoration:none; color:inherit; padding:20px 16px; text-align:center;
-    border:1px solid var(--line); background:rgba(30,21,48,.5); border-radius:4px; transition:.3s}
+    border:1px solid var(--line); background:var(--card); border-radius:4px; transition:.3s}
   .tri a:hover{border-color:var(--gold); transform:translateY(-3px)}
   .tri .k{font-family:var(--serif); font-size:12px; letter-spacing:.3em; color:var(--gold); margin-bottom:10px; display:block}
   .tri .v{font-family:var(--serif); font-weight:600; font-size:clamp(16px,2.6vw,20px); color:var(--silk); line-height:1.6}
@@ -475,16 +489,16 @@ const BOOK_CSS = `
     font-family:var(--serif); letter-spacing:.03em; margin-top:2px}
   .lu{color:#0f1a15;background:var(--jade)} .quan{color:#1a1305;background:var(--gold)}
   .ke{color:var(--gold-br);border:1px solid var(--gold)} .ji{color:#1a0606;background:var(--cinnabar)}
-  .ming{background:linear-gradient(180deg,#33244e,#241734);
+  .ming{background:linear-gradient(180deg,var(--ming-a),var(--ming-b));
     box-shadow:inset 0 0 0 1px var(--gold), inset 0 0 28px rgba(201,162,75,.16); animation:glow 5.5s ease-in-out infinite}
   @keyframes glow{0%,100%{box-shadow:inset 0 0 0 1px var(--gold),inset 0 0 22px rgba(201,162,75,.10)}
     50%{box-shadow:inset 0 0 0 1px var(--gold-br),inset 0 0 40px rgba(201,162,75,.26)}}
   .tag{position:absolute; top:0; right:0; font-family:var(--serif); font-size:12px; letter-spacing:.1em; padding:1px 6px}
   .tag.cm{color:#1a1305; background:var(--gold)}
   .tag.ly{color:var(--cinnabar); border-left:1px solid var(--cinnabar); border-bottom:1px solid var(--cinnabar)}
-  .core{grid-column:2/4; grid-row:2/4; background:radial-gradient(circle at 50% 38%, #2c1d49 0%, var(--ink) 72%);
+  .core{grid-column:2/4; grid-row:2/4; background:radial-gradient(circle at 50% 38%, var(--core-g) 0%, var(--ink) 72%);
     display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:14px; gap:7px}
-  .core .seal{font-family:var(--brush); font-size:clamp(35px,7.7vw,60px); color:var(--gold-br); line-height:.95; text-shadow:0 0 26px rgba(201,162,75,.3)}
+  .core .seal{font-family:var(--brush); font-weight:900; font-size:clamp(30px,6.6vw,50px); letter-spacing:.04em; color:var(--gold-br); line-height:1.1; text-shadow:0 0 26px rgba(201,162,75,.3)}
   .core dl{font-size:12px; color:var(--silk-dim); letter-spacing:.08em; line-height:1.9}
   .core dl b{color:var(--silk); font-family:var(--serif); font-weight:600}
   .legend{display:flex; flex-wrap:wrap; justify-content:center; gap:6px 16px; font-size:12px; color:var(--silk-dim); margin:14px 0 0}
@@ -499,11 +513,11 @@ const BOOK_CSS = `
   .desc .warn{color:var(--cinnabar); font-weight:600}
   .subhd{display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; margin:38px 0 16px;
     border-bottom:1px solid var(--line); padding-bottom:12px}
-  .glyph{font-family:var(--brush); font-size:47px; color:var(--gold-br); line-height:1}
+  .glyph{font-family:var(--brush); font-weight:900; font-size:42px; color:var(--gold-br); line-height:1}
   .subhd .topic{font-family:var(--serif); font-weight:900; font-size:27px; color:var(--silk); letter-spacing:.08em}
   .subhd .loc{font-size:12px; color:var(--gold); letter-spacing:.13em}
   .duo{display:grid; grid-template-columns:1fr 1fr; gap:18px}
-  .col{padding:18px 20px; border:1px solid var(--line); border-radius:3px; background:rgba(30,21,48,.5)}
+  .col{padding:18px 20px; border:1px solid var(--line); border-radius:3px; background:var(--card)}
   .col h3{font-family:var(--serif); font-size:18px; letter-spacing:.2em; margin-bottom:12px; display:flex; align-items:center; gap:9px}
   .col.pro h3{color:var(--jade)} .col.con h3{color:var(--cinnabar)}
   .col h3::before{content:""; width:10px; height:10px; transform:rotate(45deg)}
@@ -513,14 +527,14 @@ const BOOK_CSS = `
   .col li::before{position:absolute; left:0; font-family:var(--serif); font-size:12px; top:3px}
   .col.pro li::before{content:"吉"; color:var(--jade)} .col.con li::before{content:"煞"; color:var(--cinnabar)}
 
-  .thesis{margin:28px 0 0; padding:26px 30px; border:1px solid var(--line); border-left:3px solid var(--gold); background:rgba(40,28,62,.4)}
+  .thesis{margin:28px 0 0; padding:26px 30px; border:1px solid var(--line); border-left:3px solid var(--gold); background:var(--card-2)}
   .thesis h4{font-family:var(--serif); font-weight:900; font-size:22px; color:var(--gold-br); letter-spacing:.06em; margin-bottom:8px}
   .thesis p{color:var(--silk); font-size:18px}
   .thesis b{color:var(--cinnabar); font-weight:600}
 
   /* ---------- 大限三卡 ---------- */
   .lims{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:26px 0 0}
-  .limcard{padding:20px 18px; border:1px solid var(--line); border-radius:4px; background:rgba(30,21,48,.5); position:relative}
+  .limcard{padding:20px 18px; border:1px solid var(--line); border-radius:4px; background:var(--card); position:relative}
   .limcard.now{border-color:var(--gold); box-shadow:inset 0 0 26px rgba(201,162,75,.09)}
   .limcard .rng{font-family:var(--serif); font-size:12px; letter-spacing:.24em; color:var(--gold)}
   .limcard h4{font-family:var(--serif); font-weight:900; font-size:23px; color:var(--silk); margin:4px 0 8px}
@@ -550,13 +564,13 @@ const BOOK_CSS = `
 
   /* ---------- 攻守年曆 / 別走路線 ---------- */
   .cal{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:26px}
-  .cal .side{background:rgba(30,21,48,.5); border:1px solid var(--line); border-radius:4px; padding:18px 22px}
+  .cal .side{background:var(--card); border:1px solid var(--line); border-radius:4px; padding:18px 22px}
   .cal .side h3{font-family:var(--serif); font-size:17px; letter-spacing:.1em; margin-bottom:12px}
   .cal .side.atk h3{color:var(--jade)} .cal .side.def h3{color:var(--cinnabar)}
   .cal .side ul{list-style:none}
   .cal .side li{font-size:15px; margin-bottom:9px; color:var(--silk-dim)}
   .cal .side li b{color:var(--silk); font-weight:600; margin-right:6px; font-family:var(--serif)}
-  .avoid{background:rgba(30,21,48,.5); border:1px solid rgba(210,75,59,.38); border-radius:4px; padding:20px 24px; margin-top:14px}
+  .avoid{background:var(--card); border:1px solid rgba(210,75,59,.38); border-radius:4px; padding:20px 24px; margin-top:14px}
   .avoid h3{font-family:var(--serif); color:var(--cinnabar); font-size:18px; letter-spacing:.06em; margin-bottom:8px}
   .avoid p{font-size:15.5px; color:var(--silk); margin-bottom:6px}
   .avoid p .warn{color:var(--cinnabar); font-weight:600}
@@ -565,14 +579,14 @@ const BOOK_CSS = `
 
   /* ---------- 天賦印象 ---------- */
   .persona{margin:30px 0 0; padding:34px 28px; text-align:center; border:1px solid var(--line); border-radius:4px;
-    background:radial-gradient(circle at 50% 0%, rgba(201,162,75,.12), rgba(30,21,48,.55) 70%)}
+    background:radial-gradient(circle at 50% 0%, rgba(201,162,75,.12), var(--card) 70%)}
   .persona .plabel{font-family:var(--serif); font-size:12px; letter-spacing:.4em; color:var(--gold)}
   .persona h3{font-family:var(--serif); font-weight:900; font-size:clamp(26px,5vw,38px); color:var(--gold-br); letter-spacing:.06em; margin:10px 0 8px}
   .persona .ptags{display:flex; justify-content:center; gap:8px; flex-wrap:wrap; margin:6px 0 12px}
   .persona .ptags span{font-size:12px; font-family:var(--serif); letter-spacing:.12em; color:var(--silk-dim); border:1px solid var(--line); border-radius:20px; padding:2px 12px}
   .persona p{font-size:16.5px; color:var(--silk); max-width:560px; margin:0 auto}
   .cloudwrap{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:16px}
-  .cloud{border:1px solid var(--line); border-radius:4px; background:rgba(30,21,48,.5); padding:20px 22px; text-align:center}
+  .cloud{border:1px solid var(--line); border-radius:4px; background:var(--card); padding:20px 22px; text-align:center}
   .cloud h3{font-family:var(--serif); font-size:15px; letter-spacing:.3em; margin-bottom:14px}
   .cloud.good h3{color:var(--jade)} .cloud.bad h3{color:var(--cinnabar)}
   .cloud .words{display:flex; flex-wrap:wrap; justify-content:center; align-items:baseline; gap:10px 16px; line-height:1.5}
@@ -582,12 +596,12 @@ const BOOK_CSS = `
   .cloud .words .w2{font-size:17px; opacity:.85} .cloud .words .w3{font-size:21px; font-weight:600; opacity:.95}
   .cloud .words .w4{font-size:26px; font-weight:900; opacity:1}
   .cloud .words .w1{font-size:14px}
-  .gift{margin-top:16px; padding:20px 24px; border:1px solid var(--line); border-radius:4px; background:rgba(30,21,48,.5)}
+  .gift{margin-top:16px; padding:20px 24px; border:1px solid var(--line); border-radius:4px; background:var(--card)}
   .gift h3{font-family:var(--serif); font-weight:900; font-size:19px; color:var(--gold-br); margin-bottom:6px; letter-spacing:.04em}
   .gift p{font-size:15.5px; color:var(--silk); margin:0}
   .gift p b{color:var(--gold-br)}
   .fw{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:16px}
-  .fx{border:1px solid var(--line); border-radius:4px; background:rgba(30,21,48,.5); padding:20px 22px}
+  .fx{border:1px solid var(--line); border-radius:4px; background:var(--card); padding:20px 22px}
   .fx h3{font-family:var(--serif); font-size:17px; letter-spacing:.14em; margin-bottom:12px; display:flex; gap:8px; align-items:center}
   .fx.flash h3{color:var(--jade)} .fx.weak h3{color:var(--cinnabar)}
   .fx ol{list-style:none; display:flex; flex-direction:column; gap:14px}
@@ -599,7 +613,7 @@ const BOOK_CSS = `
 
   /* 人生羅盤 */
   .compass{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:26px}
-  .compass .cside{background:rgba(30,21,48,.5); border:1px solid var(--line); border-radius:4px; padding:20px 22px}
+  .compass .cside{background:var(--card); border:1px solid var(--line); border-radius:4px; padding:20px 22px}
   .compass .cside.go{border-top:3px solid var(--jade)} .compass .cside.no{border-top:3px solid var(--cinnabar)}
   .compass .cside h3{font-family:var(--serif); font-size:17px; letter-spacing:.12em; margin-bottom:14px}
   .compass .cside.go h3{color:var(--jade)} .compass .cside.no h3{color:var(--cinnabar)}
@@ -613,11 +627,11 @@ const BOOK_CSS = `
 
   footer{margin:60px 0 70px; padding-top:28px; border-top:1px solid var(--line)}
   .disc{font-size:12px; color:var(--silk-dim); letter-spacing:.1em; text-align:center; line-height:2}
-  .disc .b{font-family:var(--brush); color:var(--gold); font-size:21px; letter-spacing:.1em}
+  .disc .b{font-family:var(--brush); font-weight:900; color:var(--gold); font-size:18px; letter-spacing:.1em}
 
   /* fallback 章節（沿用單題報告的 markdown 樣式感） */
   .read h1,.read h2,.read h3,.read h4{color:var(--gold); letter-spacing:.06em; margin:20px 0 8px; line-height:1.5}
-  .read blockquote{border-left:3px solid var(--gold); background:rgba(30,21,48,.5); padding:10px 16px; margin:14px 0; color:var(--silk-dim)}
+  .read blockquote{border-left:3px solid var(--gold); background:var(--card); padding:10px 16px; margin:14px 0; color:var(--silk-dim)}
   .read ul,.read ol{margin:12px 0 12px 1.6em}
   .table-wrap{overflow-x:auto; margin:14px 0}
   .read table{border-collapse:collapse; width:100%; font-size:14.5px}
@@ -634,7 +648,43 @@ const BOOK_CSS = `
 
 const BOOK_SCRIPT = `
   (function(){
+    /* 配色：匯出時由 addInitScript 先設定；否則讀報告自己的記憶，再退回 app 設定，最後紫色 */
+    var KEY='zhanyan-report-theme', root=document.documentElement, t=root.dataset.theme;
+    try{ if(!t) t=localStorage.getItem(KEY); }catch(e){}
+    try{ if(!t) t=JSON.parse(localStorage.getItem('zhanyan-settings')||'{}').theme; }catch(e){}
+    if(t!=='gray'&&t!=='mauve') t='purple';
+    root.dataset.theme=t;
+    var bar=document.createElement('div'); bar.className='theme-pick';
+    [['purple','星空紫'],['mauve','藕紫色'],['gray','灰黑色']].forEach(function(p){
+      var b=document.createElement('button'); b.type='button';
+      b.className='t-'+p[0]+(p[0]===t?' on':''); b.title=p[1]; b.setAttribute('aria-label','配色：'+p[1]);
+      b.onclick=function(){ root.dataset.theme=p[0]; try{localStorage.setItem(KEY,p[0]);}catch(e){}
+        bar.querySelectorAll('button').forEach(function(x){x.classList.remove('on')}); b.classList.add('on'); };
+      bar.appendChild(b);
+    });
+    /* 下載鈕：以目前配色輸出 JPG／PDF（走 /export API，切換器不入圖） */
+    var sep=document.createElement('i'); sep.className='tp-sep'; bar.appendChild(sep);
+    ['jpg','pdf'].forEach(function(f){
+      var d=document.createElement('button'); d.type='button'; d.className='tp-dl';
+      d.textContent=f.toUpperCase(); d.title='下載 '+f.toUpperCase();
+      d.onclick=function(){
+        if(d.disabled) return;
+        d.disabled=true; d.textContent='…';
+        fetch(location.pathname+'/export',{method:'POST',headers:{'content-type':'application/json'},
+          body:JSON.stringify({format:f,theme:root.dataset.theme})})
+          .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.blob(); })
+          .then(function(bl){ var a=document.createElement('a'); a.href=URL.createObjectURL(bl);
+            a.download=document.title+'.'+f; a.click(); URL.revokeObjectURL(a.href); })
+          .catch(function(e){ alert('下載失敗：'+e.message); })
+          .finally(function(){ d.disabled=false; d.textContent=f.toUpperCase(); });
+      };
+      bar.appendChild(d);
+    });
+    document.body.appendChild(bar);
+  })();
+  (function(){
     var sky=document.getElementById('sky'), n=46, h='';
+    if(!sky){ sky=document.createElement('div'); sky.id='sky'; sky.className='sky'; sky.setAttribute('aria-hidden','true'); document.body.prepend(sky); }
     for(var i=0;i<n;i++){ var x=(i*53%100), y=(i*29%100), d=(i%6), s=(i%3)+1;
       h+='<i style="left:'+x+'%;top:'+y+'%;width:'+s+'px;height:'+s+'px;animation-delay:'+d+'s"></i>'; }
     sky.innerHTML=h;
@@ -696,7 +746,7 @@ function boardHtml(book: BookData, seal: string): string {
       <span><i class="dot" style="background:var(--gold)"></i>化權</span>
       <span><i class="dot" style="border:1px solid var(--gold)"></i>化科</span>
       <span><i class="dot" style="background:var(--cinnabar)"></i>化忌</span>
-      <span><i class="dot" style="box-shadow:inset 0 0 0 1px var(--gold);background:#33244e"></i>命宮</span>
+      <span><i class="dot" style="box-shadow:inset 0 0 0 1px var(--gold);background:var(--ming-a)"></i>命宮</span>
       <span>${escapeHtml(m.notes)}</span>
     </div>`;
 }
@@ -1012,8 +1062,8 @@ export function renderBookHtml(opts: {
 <title>${escapeHtml(heroTitle)} · 占驗紫微命書 · ${escapeHtml(name)}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;900&family=Noto+Sans+TC:wght@400;500&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
-<style>${BOOK_CSS}</style>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;900&family=Noto+Sans+TC:wght@400;500&display=swap" rel="stylesheet">
+<style>${THEME_CSS}${BOOK_CSS}</style>
 </head>
 <body>
 <div class="sky" id="sky" aria-hidden="true"></div>
@@ -1068,8 +1118,10 @@ export function renderReportHtml(opts: {
   header: ReportHeader;
   sections: ReportSection[];
   generatedAt: string;
+  /** 原始提問：顯示在標題下方的小字（標題用 AI 生成的報告標題） */
+  question?: string;
 }): string {
-  const { title, name, header: h, sections, generatedAt } = opts;
+  const { title, name, header: h, sections, generatedAt, question } = opts;
   const metaCells: [string, string][] = [
     ['性別陰陽', `${h.yinYang}${h.gender}`],
     ['年干支', h.yearGz],
@@ -1085,7 +1137,7 @@ export function renderReportHtml(opts: {
   const sectionsHtml = sections
     .map(
       (s) => `      <section class="section">
-        <h2 class="chapter">${escapeHtml(s.title)}</h2>
+        ${s.title ? `<h2 class="chapter">${escapeHtml(s.title)}</h2>` : ''}
         <div class="body">
 ${markdownToHtml(s.markdown)}
         </div>
@@ -1099,12 +1151,17 @@ ${markdownToHtml(s.markdown)}
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${escapeHtml(title)}｜${escapeHtml(name)}</title>
-  <style>${CSS}</style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;900&family=Noto+Sans+TC:wght@400;500&display=swap" rel="stylesheet">
+  <style>${THEME_CSS}${CSS}</style>
 </head>
 <body>
   <div class="page">
     <header class="hero">
+      <div class="eyebrow">占 驗 紫 微 · 單 題 報 告</div>
       <div class="title">${escapeHtml(title)}</div>
+      ${question ? `<p class="question"><b>提 問</b>${escapeHtml(question)}</p>` : ''}
       <div class="name">${escapeHtml(name)}</div>
       <div class="hero-rule"></div>
       <div class="meta">
@@ -1112,8 +1169,9 @@ ${markdownToHtml(s.markdown)}
       </div>
     </header>
 ${sectionsHtml}
-    <footer class="footer">本命書於 ${escapeHtml(generatedAt)} 生成</footer>
+    <footer class="footer">本報告於 ${escapeHtml(generatedAt)} 生成 · 內容供自我參考，不是命定的判決</footer>
   </div>
+<script>${BOOK_SCRIPT}</script>
 </body>
 </html>
 `;

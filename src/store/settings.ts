@@ -2,20 +2,30 @@
 
 import type { ReportStyle } from '../analysis/chatPrompt';
 
+/** 介面配色：藕紫（莫蘭迪紫藕）、灰黑（原黑白極簡）、紫色（命書墨紫） */
+export type Theme = 'mauve' | 'gray' | 'purple';
+
 export interface Settings {
   /** 右側盤面顯示模式，預設精簡盤 */
   chartMode: 'simple' | 'full';
+  /** 介面配色，預設藕紫 */
+  theme: Theme;
   /** AI 供應商 id，對應 src/ai/providers.ts 的 AI_PROVIDERS */
   aiProvider: string;
   /** 模型 id（該供應商底下） */
   aiModel: string;
-  /** 命書文風：白話（預設）或書面（正式） */
+  /** 回覆風格（聊天／報告／命書共用）：白話（預設）或命理（正式） */
   reportStyle: ReportStyle;
 }
 
 const KEY = 'zhanyan-settings';
 
-export const DEFAULT_SETTINGS: Settings = { chartMode: 'simple', aiProvider: 'claude', aiModel: 'opus', reportStyle: 'plain' };
+export const DEFAULT_SETTINGS: Settings = { chartMode: 'simple', theme: 'mauve', aiProvider: 'claude', aiModel: 'opus', reportStyle: 'plain' };
+
+/** 套用配色到 <html data-theme>：CSS token 依此切換 */
+export function applyTheme(theme: Theme): void {
+  document.documentElement.dataset.theme = theme;
+}
 
 export function loadSettings(): Settings {
   try {

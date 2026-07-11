@@ -1,6 +1,7 @@
 import type { ChartAnalysis } from './analysis';
 import type { TopicFacts } from './facts';
 import type { ChatMessage } from '../store/mingzhu';
+import { TONE_RULE } from './tone';
 
 /** assistant 歷史回答的截斷長度（字元） */
 const ASSISTANT_HISTORY_LIMIT = 600;
@@ -87,7 +88,7 @@ export function profileSection(profile?: string): string {
 
 export type ReportStyle = 'plain' | 'classic';
 
-/** 命書寫作風格段：plain 回白話規則（語感對標使用者認可的舊版報告），classic／未傳回空字串維持現行輸出 */
+/** 回覆風格段（聊天／報告／命書共用）：plain 回白話規則（語感對標使用者認可的舊版報告），classic／未傳回空字串維持現行輸出 */
 export function styleSection(style?: ReportStyle): string {
   if (style !== 'plain') return '';
   return `【寫作風格：白話】
@@ -125,10 +126,10 @@ export function buildChatPrompt(
 
   sections.push(`【本次問題】\n${question}`);
   sections.push(mode === 'report' ? REPORT_REQUIREMENTS : CHAT_REQUIREMENTS);
-  if (mode === 'report') {
-    const ss = styleSection(style);
-    if (ss) sections.push(ss);
-  }
+  sections.push(TONE_RULE);
+  // 回覆風格：聊天與報告一體適用（通用設定）
+  const ss = styleSection(style);
+  if (ss) sections.push(ss);
 
   return sections.join('\n\n');
 }

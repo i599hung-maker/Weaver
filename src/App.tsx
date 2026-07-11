@@ -5,6 +5,7 @@ import Sidebar from './components/Sidebar';
 import HomeIntro from './components/HomeIntro';
 import MingzhuModal from './components/MingzhuModal';
 import SettingsModal from './components/SettingsModal';
+import ConfirmModal, { type ConfirmRequest } from './components/ConfirmModal';
 import ChatPanel from './components/ChatPanel';
 import RightPanel from './components/RightPanel';
 import {
@@ -14,7 +15,7 @@ import {
   saveMingzhu,
   type Mingzhu,
 } from './store/mingzhu';
-import { loadSettings, saveSettings, type Settings } from './store/settings';
+import { applyTheme, loadSettings, saveSettings, type Settings } from './store/settings';
 import './App.css';
 
 /** 星空背景：與命書版型同款（位置／大小／延遲用固定公式，維持 render 穩定） */
@@ -44,17 +45,20 @@ function Sky() {
   );
 }
 
-/** 欄寬（px）記憶：側欄與右欄，拖分隔線調整 */
+/** 右欄寬（px）記憶：拖分隔線調整（側欄固定寬） */
 const WIDTHS_KEY = 'zhanyan-col-widths';
 
-function loadWidths(): { sb: number; rp: number } {
+function loadRpWidth(): number {
   try {
     const raw = localStorage.getItem(WIDTHS_KEY);
-    if (raw) return { sb: 250, rp: 600, ...(JSON.parse(raw) as object) };
+    if (raw) {
+      const rp = (JSON.parse(raw) as { rp?: number }).rp;
+      if (typeof rp === 'number') return rp;
+    }
   } catch {
     /* ignore */
   }
-  return { sb: 250, rp: 600 };
+  return 600;
 }
 
 export default function App() {
@@ -65,32 +69,35 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settings, setSettings] = useState<Settings>(loadSettings);
   const [banner, setBanner] = useState<string | null>(null);
+  const [confirmReq, setConfirmReq] = useState<ConfirmRequest | null>(null);
   const [rightOpen, setRightOpen] = useState(false); // <1100px 時右欄開關
-  const [widths, setWidths] = useState(loadWidths);
+  const [rpWidth, setRpWidth] = useState(loadRpWidth);
 
   useEffect(() => {
     try {
-      localStorage.setItem(WIDTHS_KEY, JSON.stringify(widths));
+      localStorage.setItem(WIDTHS_KEY, JSON.stringify({ rp: rpWidth }));
     } catch {
       /* ignore */
     }
-  }, [widths]);
+  }, [rpWidth]);
+
+  useEffect(() => {
+    applyTheme(settings.theme);
+  }, [settings.theme]);
 
   const changeSettings = (s: Settings) => {
     setSettings(s);
     saveSettings(s);
   };
 
-  /** 拖曳直分隔線調整欄寬（sb＝側欄、rp＝右欄） */
-  const startResize = (side: 'sb' | 'rp') => (e: ReactMouseEvent) => {
+  /** 拖曳直分隔線調整右欄寬 */
+  const startResize = (e: ReactMouseEvent) => {
     e.preventDefault();
     const startX = e.clientX;
-    const start = widths[side];
+    const start = rpWidth;
     const onMove = (ev: MouseEvent) => {
       const dx = ev.clientX - startX;
-      const raw = side === 'sb' ? start + dx : start - dx;
-      const next = side === 'sb' ? Math.min(Math.max(raw, 180), 420) : Math.min(Math.max(raw, 380), 900);
-      setWidths((w) => ({ ...w, [side]: next }));
+      setRpWidth(Math.min(Math.max(start - dx, 380), 900));
     };
     const onUp = () => {
       window.removeEventListener('mousemove', onMove);
@@ -183,10 +190,14 @@ export default function App() {
     }
   };
 
-  /** 側欄的對話刪除（中欄卡片刪除由 ChatPanel 自行處理） */
-  const removeConv = async (convId: string) => {
+  /** 側欄的對話刪除（中欄卡片刪除由 ChatPanel 自行處理）：先跳自家確認彈窗 */
+  const removeConv = (convId: string) => {
     if (!mingzhu) return;
-    if (!window.confirm('刪除此對話？')) return;
+    setConfirmReq({ text: '刪除此對話？', okLabel: '刪除', onOk: () => void doRemoveConv(convId) });
+  };
+
+  const doRemoveConv = async (convId: string) => {
+    if (!mingzhu) return;
     const next: Mingzhu = {
       ...mingzhu,
       conversations: mingzhu.conversations.filter((c) => c.id !== convId),
@@ -203,10 +214,7 @@ export default function App() {
   return (
     <>
       <Sky />
-      <div
-        className="layout"
-        style={{ '--sb-w': `${widths.sb}px`, '--rp-w': `${widths.rp}px` } as CSSProperties}
-      >
+      <div className="layout" style={{ '--rp-w': `${rpWidth}px` } as CSSProperties}>
       <Sidebar
         list={list}
         activeId={activeId}
@@ -220,7 +228,6 @@ export default function App() {
         onOpenSettings={() => setSettingsOpen(true)}
         onHome={goHome}
       />
-      <div className="col-resizer" onMouseDown={startResize('sb')} />
 
       <main className="main">
         {banner && (
@@ -244,24 +251,26 @@ export default function App() {
         )}
       </main>
 
-      <button className="rp-toggle" onClick={() => setRightOpen((o) => !o)}>
-        盤面
-      </button>
-      <div className="col-resizer rp" onMouseDown={startResize('rp')} />
-      <div className={`right-col ${rightOpen ? 'open' : ''}`}>
-        {mingzhu && result ? (
-          <RightPanel
-            key={mingzhu.id}
-            mingzhu={mingzhu}
-            result={result}
-            simple={settings.chartMode === 'simple'}
-            onUpdate={updateMingzhu}
-          />
-        ) : (
-          <div className="empty">選擇命主後顯示盤面與分析。</div>
-        )}
-      </div>
+      {/* 首頁模式（未選命主）不顯示右欄：中欄介紹頁佔滿全寬 */}
+      {mingzhu && result && (
+        <>
+          <button className="rp-toggle" onClick={() => setRightOpen((o) => !o)}>
+            盤面
+          </button>
+          <div className="col-resizer rp" onMouseDown={startResize} />
+          <div className={`right-col ${rightOpen ? 'open' : ''}`}>
+            <RightPanel
+              key={mingzhu.id}
+              mingzhu={mingzhu}
+              result={result}
+              simple={settings.chartMode === 'simple'}
+              onUpdate={updateMingzhu}
+            />
+          </div>
+        </>
+      )}
 
+      <ConfirmModal req={confirmReq} onClose={() => setConfirmReq(null)} />
       <MingzhuModal open={modalOpen} onClose={() => setModalOpen(false)} onSubmit={addMingzhu} />
       <SettingsModal
         open={settingsOpen}

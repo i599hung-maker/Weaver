@@ -5,18 +5,23 @@
 :root {
   color-scheme: dark;
 
-  /* ── 主題 token（黑白極簡） ── */
+  /* ── 主題 token（灰黑・黑白極簡） ── */
   --bg: #131314;
   --bg-sidebar: #161618;
   --bg-panel: #1c1c1f;
   --bg-hover: #232327;
   --bg-active: #2a2a2e;
   --border: #2b2b2f;
+  /* 半透明底（透出星空）：側欄／卡片／置頂列 */
+  --glass-sidebar: rgba(22, 22, 24, 0.72);
+  --glass-card: rgba(28, 28, 31, 0.6);
+  --glass-bar: rgba(19, 19, 20, 0.85);
   --text: #ececec;
   --text-2: #9b9ba1;
   --text-3: #6c6c72;
   --primary: #ececec;
   --primary-fg: #131314;
+  --gold: #e7cb84; /* 星空金：星點與首頁羅盤共用 */
   --radius: 12px;
   --headbar-h: 54px; /* 三欄頂部標題列統一高度：底線對齊 */
 
@@ -26,6 +31,40 @@
   --malefic: #ff8a80;
   --flower: #f2a3c8;
   --teal: #57c4c9;
+}
+
+/* ── 紫色配色（命書墨紫）：底色與細線同完整命書版型 ── */
+:root[data-theme='purple'] {
+  --bg: #17101f;
+  --bg-sidebar: #1b1327;
+  --bg-panel: #1e1530;
+  --bg-hover: #281c3e;
+  --bg-active: #33254e;
+  --border: rgba(201, 162, 75, 0.22); /* 命書的淡金細線 */
+  --glass-sidebar: rgba(30, 21, 48, 0.6);
+  --glass-card: rgba(30, 21, 48, 0.5);
+  --glass-bar: rgba(23, 16, 31, 0.85);
+}
+
+/* 命書同款的紫暈底：只在紫色配色時鋪在 body 上，透過半透明欄位透出 */
+:root[data-theme='purple'] body {
+  background:
+    radial-gradient(1200px 800px at 50% -10%, #2a1c44 0%, rgba(42, 28, 68, 0) 55%),
+    radial-gradient(900px 700px at 85% 18%, #25183a 0%, rgba(37, 24, 58, 0) 60%),
+    var(--bg);
+}
+
+/* ── 藕紫配色（莫蘭迪紫藕）：設定頁可切換，預設 ── */
+:root[data-theme='mauve'] {
+  --bg: #332b36;
+  --bg-sidebar: #362e39;
+  --bg-panel: #3d3441;
+  --bg-hover: #463c4a;
+  --bg-active: #4f4454;
+  --border: #524757;
+  --glass-sidebar: rgba(54, 46, 57, 0.72);
+  --glass-card: rgba(61, 52, 65, 0.6);
+  --glass-bar: rgba(33, 30, 35, 0.85);
 }
 
 html,

@@ -1,6 +1,8 @@
 import { useRef, useState } from 'react';
 import { Compass, MessageSquare, Pencil, Settings, Trash2, UserRoundPlus, Users } from 'lucide-react';
 import type { Mingzhu } from '../store/mingzhu';
+import { BRAND_NAME } from '../brand';
+import ConfirmModal, { type ConfirmRequest } from './ConfirmModal';
 
 interface Props {
   list: Mingzhu[];
@@ -13,6 +15,7 @@ interface Props {
   onSelectConv: (id: string | null) => void;
   onDeleteConv: (id: string) => void;
   onOpenSettings: () => void;
+  onHome: () => void;
 }
 
 export default function Sidebar({
@@ -26,9 +29,11 @@ export default function Sidebar({
   onSelectConv,
   onDeleteConv,
   onOpenSettings,
+  onHome,
 }: Props) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
+  const [confirm, setConfirm] = useState<ConfirmRequest | null>(null);
   const cancelRef = useRef(false); // Esc 取消時略過 blur 的確認
 
   const startEdit = (m: Mingzhu) => {
@@ -50,10 +55,10 @@ export default function Sidebar({
 
   return (
     <aside className="sidebar">
-      <div className="sb-brand">
+      <button className="sb-brand" title="回首頁" onClick={onHome}>
         <Compass size={20} strokeWidth={1.8} />
-        <h1>LifePath 占驗紫微</h1>
-      </div>
+        <h1>{BRAND_NAME}</h1>
+      </button>
       <div className="sb-section">
         <Users size={15} strokeWidth={1.8} />
         <span>命主列表</span>
@@ -105,7 +110,11 @@ export default function Sidebar({
                 title="刪除命主"
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (window.confirm(`刪除命主「${m.name}」？其對話紀錄將一併刪除。`)) onDelete(m.id);
+                  setConfirm({
+                    text: `刪除命主「${m.name}」？其對話紀錄將一併刪除。`,
+                    okLabel: '刪除',
+                    onOk: () => onDelete(m.id),
+                  });
                 }}
               >
                 <Trash2 size={13} strokeWidth={1.8} />
@@ -143,6 +152,7 @@ export default function Sidebar({
         <Settings size={15} strokeWidth={1.8} />
         <span>設定</span>
       </button>
+      <ConfirmModal req={confirm} onClose={() => setConfirm(null)} />
     </aside>
   );
 }

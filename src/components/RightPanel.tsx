@@ -3,6 +3,7 @@ import { BookOpen, LoaderCircle } from 'lucide-react';
 import type { CastResult } from '../engine/cast';
 import { saveMingzhu, type Mingzhu } from '../store/mingzhu';
 import { bookTitle, upsertReport } from '../store/reportList';
+import ConfirmModal, { type ConfirmRequest } from './ConfirmModal';
 import { buildAnalysis } from '../analysis/analysis';
 import { buildReportHeader } from '../analysis/reportPrompts';
 import { buildBookChapters, buildBookData } from '../analysis/reportBook';
@@ -33,6 +34,7 @@ export default function RightPanel({ mingzhu, result, simple, onUpdate }: Props)
   const [selYear, setSelYear] = useState<number | null>(null);
   const [rs, setRs] = useState<ReportStatus | null>(null); // null＝尚未取得狀態
   const [genErr, setGenErr] = useState<string | null>(null);
+  const [confirm, setConfirm] = useState<ConfirmRequest | null>(null);
   const [pollTick, setPollTick] = useState(0);
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -69,9 +71,17 @@ export default function RightPanel({ mingzhu, result, simple, onUpdate }: Props)
     };
   }, [mingzhu.id, pollTick]);
 
-  const generate = async (regen: boolean) => {
+  /** 產生前先跳自家確認彈窗 */
+  const generate = (regen: boolean) => {
     const hint = '約需 15~30 分鐘，背景生成，期間可照常聊天。';
-    if (!window.confirm(regen ? `重新產生完整命書？${hint}` : `開始產生完整命書？${hint}`)) return;
+    setConfirm({
+      text: regen ? `重新產生完整命書？${hint}` : `開始產生完整命書？${hint}`,
+      okLabel: '開始產生',
+      onOk: () => void doGenerate(),
+    });
+  };
+
+  const doGenerate = async () => {
     setGenErr(null);
     try {
       const currentYear = new Date().getFullYear();
@@ -188,6 +198,7 @@ export default function RightPanel({ mingzhu, result, simple, onUpdate }: Props)
         排盤規則：文墨天機安星碼 S5VoG（占驗派）｜庚干四化 陽武同相｜天馬依月支｜截空旬空占驗排法｜
         晚子時視為次日｜閏月月中分界
       </footer>
+      <ConfirmModal req={confirm} onClose={() => setConfirm(null)} />
     </div>
   );
 }
