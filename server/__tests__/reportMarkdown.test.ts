@@ -151,10 +151,10 @@ describe('renderBookMarkdown', () => {
     expect(md).toContain('## 大限走勢');
     expect(md).toContain('### 26 – 35 歲 · 2019 – 2028（現行）定情定業期');
     expect(md).toContain('## 重點應期');
-    expect(md).toContain('### 2023 癸卯 · 30歲（災宮引動）災宮踩在忌星上');
-    expect(md).toContain('### 2026 丙午 · 33歲 · 今年（流命引動）今年：感情定奪年');
+    expect(md).toContain('#### 2023 癸卯 · 30歲（災宮引動）災宮踩在忌星上');
+    expect(md).toContain('#### 2026 丙午 · 33歲 · 今年（流命引動）今年：感情定奪年');
     expect(md).toContain('- 為什麼：流年命宮疊大限疾厄。');
-    expect(md).toContain('- 回看：有身體狀況就是此應。'); // 過去年份為回看
+    expect(md).toContain('- 驗證點：有身體狀況就是此應。'); // 過去年份為驗證點
     expect(md).toContain('- 建議：感情大事可以定。');
     expect(md).toContain('## 人生羅盤');
     expect(md).toContain('- **往管理走**：管錢管人是主場。（往掌局位置走）');
@@ -164,6 +164,16 @@ describe('renderBookMarkdown', () => {
     expect(md).toContain('改走這條：擔保不行。');
     expect(md).toContain('**一句話記住這張盤**：邊界立好，鋒只在該出手時出。');
     expect(md).toContain('文墨天機安星碼 S5VoG（占驗派）');
+  });
+
+  it('重點應期分過往對答案與未來引動兩小節', () => {
+    expect(md).toContain('### 過往對答案');
+    expect(md).toContain('### 未來引動');
+    expect(md).toContain('- 驗證點：有身體狀況就是此應。');
+    expect(md).toContain('- 建議：感情大事可以定。');
+    expect(md).not.toContain('- 回看：');
+    expect(md).toContain('#### 2023 癸卯 · 30歲（災宮引動）災宮踩在忌星上');
+    expect(md.indexOf('### 過往對答案')).toBeLessThan(md.indexOf('### 未來引動'));
   });
 
   it('__fallbackMd 章節原文保留，其他章節照常', () => {

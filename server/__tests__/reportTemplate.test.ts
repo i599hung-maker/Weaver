@@ -273,7 +273,19 @@ describe('renderBookHtml', () => {
     expect(html).toContain('丙午 · 33歲 · 今年');
     expect(html).toContain('<em>為什麼</em>');
     expect(html).toContain('<em>建議</em>');
-    expect(html).toContain('<em>回看</em>');
+    expect(html).toContain('<em>驗證點</em>');
+  });
+
+  it('重點應期分過往對答案與未來引動兩段', () => {
+    // 過往與未來兩段標題
+    expect(html).toContain('過往對答案');
+    expect(html).toContain('未來引動');
+    // 過往年份（2023/2024）的鏈尾標籤是驗證點，未來是建議
+    expect(html).toContain('<em>驗證點</em>');
+    expect(html).toContain('<em>建議</em>');
+    expect(html).not.toContain('<em>回看</em>');
+    // 過往段在未來段之前
+    expect(html.indexOf('過往對答案')).toBeLessThan(html.indexOf('未來引動'));
   });
 
   it('人生羅盤與知命改命：go/no、攻守年曆、avoid 與 final', () => {

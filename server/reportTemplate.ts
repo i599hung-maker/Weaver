@@ -544,7 +544,9 @@ const BOOK_CSS = `
     letter-spacing:.14em; color:var(--gold-br); border:1px solid var(--gold); padding:1px 8px; border-radius:20px}
 
   /* ---------- 應期 timeline ---------- */
-  .tl{margin-top:28px; display:flex; flex-direction:column; gap:0}
+  .tlh{margin-top:34px; font-family:var(--serif); font-weight:900; font-size:18px; color:var(--gold); letter-spacing:.12em}
+  .tlh span{margin-left:10px; font-size:12px; font-weight:400; color:var(--silk-dim); letter-spacing:.08em}
+  .tl{margin-top:14px; display:flex; flex-direction:column; gap:0}
   .ev{display:grid; grid-template-columns:118px 1fr; gap:20px; padding:20px 0; border-bottom:1px dashed rgba(201,162,75,.16); opacity:0; transform:translateY(24px); transition:opacity .9s ease, transform .9s ease}
   .ev.in{opacity:1; transform:none}
   .ev .y{text-align:right}
@@ -909,23 +911,16 @@ function eventMark(e: BookEvent): { cls: string; text: string } {
   return { cls: 'm1', text: e.marks[0] ?? '引動' };
 }
 
-function eventsSection(book: BookData, ch: unknown): string {
-  const head = `<div class="syshead"><div class="idx">肆</div><h2>重點應期</h2><div class="en">哪些年要特別注意 · 附為什麼</div></div>
-    <p class="desc" style="text-align:center; margin:20px auto 4px; max-width:680px; color:var(--silk-dim)">年份由程式照占驗派規則推算（流命引動法＋疊星引動法）。過去的年份可以先對答案。</p>`;
-  const o = asObj(ch);
-  const items = o ? arr(o.events).map(asObj).filter((x): x is Dict => !!x && typeof x.year === 'number') : [];
-  if (items.length === 0) return `<div class="sys">${head}</div>${fallbackBlock('重點應期', ch)}`;
-  const byYear = new Map(items.map((x) => [x.year as number, x]));
-  const evs = book.events
-    .map((e) => {
-      const c = byYear.get(e.year);
-      const mk = eventMark(e);
-      const title = c && str(c.title) ? slot(c.title) : `${escapeHtml(mk.text)}年`;
-      const desc = c && str(c.desc) ? slot(c.desc) : '';
-      const why = c && str(c.why) ? slot(c.why) : e.reasons.map((r) => escapeHtml(r)).join('；');
-      const advice = c && str(c.advice) ? slot(c.advice) : '';
-      const chain = `<div class="chain"><em>為什麼</em>：${why}${advice ? `<br><em>${e.isPast ? '回看' : '建議'}</em>：${advice}` : ''}</div>`;
-      return `<div class="ev${e.isCurrent ? ' hot' : ''}">
+/** 單筆應期列：過往鏈尾標「驗證點」、未來標「建議」 */
+function eventRow(e: BookEvent, byYear: Map<number, Dict>): string {
+  const c = byYear.get(e.year);
+  const mk = eventMark(e);
+  const title = c && str(c.title) ? slot(c.title) : `${escapeHtml(mk.text)}年`;
+  const desc = c && str(c.desc) ? slot(c.desc) : '';
+  const why = c && str(c.why) ? slot(c.why) : e.reasons.map((r) => escapeHtml(r)).join('；');
+  const advice = c && str(c.advice) ? slot(c.advice) : '';
+  const chain = `<div class="chain"><em>為什麼</em>：${why}${advice ? `<br><em>${e.isPast ? '驗證點' : '建議'}</em>：${advice}` : ''}</div>`;
+  return `<div class="ev${e.isCurrent ? ' hot' : ''}">
         <div class="y"><div class="yy">${e.year}</div><div class="gz2">${escapeHtml(e.gz)} · ${e.age}歲${e.isCurrent ? ' · 今年' : ''}</div><span class="mk ${mk.cls}">${escapeHtml(mk.text)}</span></div>
         <div>
           <h5>${title}</h5>
@@ -933,13 +928,28 @@ function eventsSection(book: BookData, ch: unknown): string {
           ${chain}
         </div>
       </div>`;
-    })
-    .join('\n\n      ');
+}
+
+function eventsSection(book: BookData, ch: unknown): string {
+  const head = `<div class="syshead"><div class="idx">肆</div><h2>重點應期</h2><div class="en">哪些年要特別注意 · 附為什麼</div></div>
+    <p class="desc" style="text-align:center; margin:20px auto 4px; max-width:680px; color:var(--silk-dim)">年份由程式照占驗派規則推算（流命引動法＋疊星引動法）。</p>`;
+  const o = asObj(ch);
+  const items = o ? arr(o.events).map(asObj).filter((x): x is Dict => !!x && typeof x.year === 'number') : [];
+  if (items.length === 0) return `<div class="sys">${head}</div>${fallbackBlock('重點應期', ch)}`;
+  const byYear = new Map(items.map((x) => [x.year as number, x]));
+  const past = book.events.filter((e) => e.isPast);
+  const future = book.events.filter((e) => !e.isPast);
+  const seg = (label: string, sub: string, evs: BookEvent[]): string =>
+    evs.length === 0
+      ? ''
+      : `<h3 class="tlh">${label}<span>${sub}</span></h3>
+    <div class="tl">
+      ${evs.map((e) => eventRow(e, byYear)).join('\n\n      ')}
+    </div>`;
   return `<div class="sys">
     ${head}
-    <div class="tl">
-      ${evs}
-    </div>
+    ${seg('過往對答案', '拿實際發生的事驗盤', past)}
+    ${seg('未來引動', '每年附建議', future)}
   </div>`;
 }
 

@@ -84,13 +84,26 @@ function natalMutText(yearStem: string): string {
   return `生年${yearStem}化：${stars[0][0]}祿 ${stars[1][0]}權 ${stars[2][0]}科 ${stars[3][0]}忌`;
 }
 
-/** 重點應期：全大限 hits 攤平依年份 group，權重前 8 名（今年命中必收），年份升冪 */
-export function selectKeyEvents(analysis: ChartAnalysis, currentYear: number): BookEvent[] {
+/** 年齡級距（虛歲）：過往池回看年數與筆數上限 */
+function pastQuota(age: number): { lookback: number; max: number } {
+  if (age < 35) return { lookback: 8, max: 4 };
+  if (age <= 55) return { lookback: 15, max: 6 };
+  return { lookback: 25, max: 8 };
+}
+
+/**
+ * 重點應期拆兩池（年份升冪合併輸出）：
+ * - 過往對答案：回看範圍與筆數隨虛歲級距，權重優先、同權取較近年，且虛歲不早於 15
+ * - 未來引動：今年~+22 年權重前 8，今年命中必收
+ */
+export function selectKeyEvents(analysis: ChartAnalysis, currentYear: number, birthYear: number): BookEvent[] {
+  const quota = pastQuota(currentYear - birthYear + 1);
+  const minPastYear = Math.max(currentYear - quota.lookback, birthYear + 14);
   const byYear = new Map<number, BookEvent>();
   for (const d of analysis.decadals) {
     for (const h of d.hits) {
       if (h.weight < 2 && h.method !== '流命引動' && h.method !== '災宮引動') continue;
-      if (h.year < currentYear - 6 || h.year > currentYear + 22) continue;
+      if (h.year < currentYear ? h.year < minPastYear : h.year > currentYear + 22) continue;
       const e =
         byYear.get(h.year) ??
         ({
@@ -109,11 +122,16 @@ export function selectKeyEvents(analysis: ChartAnalysis, currentYear: number): B
       byYear.set(h.year, e);
     }
   }
-  const all = [...byYear.values()].sort((a, b) => b.weight - a.weight || a.year - b.year);
-  let top = all.slice(0, 8);
-  const cur = all.find((e) => e.isCurrent);
-  if (cur && !top.includes(cur)) top = [...top.slice(0, 7), cur];
-  return top.sort((a, b) => a.year - b.year);
+  const all = [...byYear.values()];
+  const past = all
+    .filter((e) => e.isPast)
+    .sort((a, b) => b.weight - a.weight || b.year - a.year)
+    .slice(0, quota.max);
+  const futureAll = all.filter((e) => !e.isPast).sort((a, b) => b.weight - a.weight || a.year - b.year);
+  let future = futureAll.slice(0, 8);
+  const cur = futureAll.find((e) => e.isCurrent);
+  if (cur && !future.includes(cur)) future = [...future.slice(0, 7), cur];
+  return [...past, ...future].sort((a, b) => a.year - b.year);
 }
 
 /** 由排盤結果組出命書的確定性資料 */
@@ -171,7 +189,7 @@ export function buildBookData(result: CastResult, analysis: ChartAnalysis, curre
     },
     cells,
     decadals,
-    events: selectKeyEvents(analysis, currentYear),
+    events: selectKeyEvents(analysis, currentYear, birthYear),
     topicLocs,
   };
 }
@@ -298,19 +316,23 @@ ${JSON_RULE}`;
 }
 
 function eventsPrompt(analysis: ChartAnalysis, book: BookData, currentYear: number): string {
-  const years = book.events.map((e) => e.year).join('、');
-  return `你是占驗派紫微斗數論命助手。以下是規則引擎推算的重點應期年份與原因（占驗派流命引動法＋疊星引動法，程式計算，勿自行增減），請為視覺化命書的「重點應期」時間軸產生每年的解讀。
+  const past = book.events.filter((e) => e.isPast);
+  const future = book.events.filter((e) => !e.isPast);
+  const allYears = book.events.map((e) => e.year).join('、');
+  return `你是占驗派紫微斗數論命助手。以下是規則引擎推算的重點應期年份與原因（占驗派流命引動法＋疊星引動法，程式計算，勿自行增減），請為視覺化命書的「重點應期」時間軸產生每年的解讀。時間軸分兩段：過往年份用來對答案驗盤，未來年份給建議。
 
 【命主】${headerDesc(analysis)}。今年西元 ${currentYear} 年。${book.meta.natalMutText}。
 
-【年份清單】${years}
+【過往年份（對答案）】${past.length > 0 ? past.map((e) => e.year).join('、') : '（無）'}
+【未來年份】${future.length > 0 ? future.map((e) => e.year).join('、') : '（無）'}
 
 【各年引動原因】
 ${eventLines(book.events)}
 
 【輸出 JSON 格式（結構範例，值請換成內容）】
-{"events":[{"year":2026,"title":"該年主題（≤16字）","desc":"40~80字，白話講會發生什麼","why":"60~120字，完整原因鏈：看到什麼（星＋宮＋四化）→ 所以推論什麼","advice":"≤60字；未來年份給具體建議，過去年份寫回看驗證點"}]}
-events 必須一一對應年份清單（${years}），全部涵蓋、依年份升冪、不得新增或刪除年份。
+{"events":[{"year":2026,"title":"該年主題（≤16字）","desc":"40~80字，白話講會發生什麼","why":"60~120字，完整原因鏈：看到什麼（星＋宮＋四化）→ 所以推論什麼","advice":"≤60字；未來年份給具體建議；過往年份寫驗證點——一句可回想對照的問句（例：這年是否換了工作？）"}]}
+events 必須一一對應全部年份（${allYears}），全部涵蓋、依年份升冪、不得新增或刪除年份。
+過往年份若命主自述有提到對應年份的事件，desc 或 advice 要直接指出「此年命中自述的○○」，作為驗盤信心依據。
 
 ${JSON_RULE}`;
 }

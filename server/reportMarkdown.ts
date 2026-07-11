@@ -162,24 +162,29 @@ function eventMarkText(e: BookEvent): string {
   return e.marks[0] ?? '引動';
 }
 
-/** 重點應期：依 book.events 配章節 events（對照 eventsSection 的為什麼／建議鏈） */
+/** 重點應期：依 isPast 分「過往對答案／未來引動」兩小節（對照 eventsSection 的兩段時間軸） */
 function eventsMd(book: BookData, ch: unknown): string[] {
   const o = asObj(ch);
   const items = o ? arr(o.events).map(asObj).filter((x): x is Dict => !!x && typeof x.year === 'number') : [];
   if (items.length === 0) return fallbackMd(ch);
   const byYear = new Map(items.map((x) => [x.year as number, x]));
-  const out: string[] = [];
-  for (const e of book.events) {
+  const lines = (e: BookEvent): string[] => {
     const c = byYear.get(e.year);
     const mk = eventMarkText(e);
     const title = c && str(c.title) ? (c.title as string) : `${mk}年`;
-    out.push(`### ${e.year} ${e.gz} · ${e.age}歲${e.isCurrent ? ' · 今年' : ''}（${mk}）${title}`, '');
+    const out: string[] = [`#### ${e.year} ${e.gz} · ${e.age}歲${e.isCurrent ? ' · 今年' : ''}（${mk}）${title}`, ''];
     if (c && str(c.desc)) out.push(c.desc as string, '');
     const why = c && str(c.why) ? (c.why as string) : e.reasons.join('；');
     out.push(`- 為什麼：${why}`);
-    if (c && str(c.advice)) out.push(`- ${e.isPast ? '回看' : '建議'}：${c.advice as string}`);
+    if (c && str(c.advice)) out.push(`- ${e.isPast ? '驗證點' : '建議'}：${c.advice as string}`);
     out.push('');
-  }
+    return out;
+  };
+  const past = book.events.filter((e) => e.isPast);
+  const future = book.events.filter((e) => !e.isPast);
+  const out: string[] = [];
+  if (past.length > 0) out.push('### 過往對答案', '', ...past.flatMap(lines));
+  if (future.length > 0) out.push('### 未來引動', '', ...future.flatMap(lines));
   return out;
 }
 
