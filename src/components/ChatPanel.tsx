@@ -5,7 +5,7 @@ import { buildAnalysis } from '../analysis/analysis';
 import { buildChatPrompt } from '../analysis/chatPrompt';
 import { buildReportHeader } from '../analysis/reportPrompts';
 import { aiRequestParams, loadSettings } from '../store/settings';
-import { findProvider } from '../ai/providers';
+import { aiModelLabel, findProvider } from '../ai/providers';
 import { questionTitle, upsertReport } from '../store/reportList';
 import ProfileCard from './ProfileCard';
 import ReportsCard from './ReportsCard';
@@ -186,10 +186,11 @@ export default function ChatPanel({ mingzhu, result, activeConvId, onSelectConv,
       const qMode: Mode = last.mode ?? 'chat';
       const history = conv.messages.slice(0, -1);
       const prompt = buildChatPrompt(analysis, history, question, new Date().getFullYear(), qMode, mingzhu.profile, loadSettings().reportStyle);
+      const ai = aiRequestParams(); // 發問當下的供應商／模型：報告紀錄與頁尾標記都用這一組
       const res = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ prompt, ...aiRequestParams() }),
+        body: JSON.stringify({ prompt, ...ai }),
       });
       const data = (await res.json()) as { text?: string; error?: string };
       if (!res.ok || !data.text) throw new Error(data.error ?? `HTTP ${res.status}`);
@@ -213,6 +214,7 @@ export default function ChatPanel({ mingzhu, result, activeConvId, onSelectConv,
               header: buildReportHeader(analysis, result.meta),
               question,
               sections: [{ title: '', markdown }], // 標題已在 hero 顯示，章節列留空避免重複
+              modelLabel: aiModelLabel(ai.provider, ai.model) ?? undefined, // 頁尾標記用的顯示字串
             }),
           });
           if (!rr.ok) throw new Error(`HTTP ${rr.status}`);
@@ -229,6 +231,8 @@ export default function ChatPanel({ mingzhu, result, activeConvId, onSelectConv,
           title: questionTitle(question),
           kind: 'question',
           createdAt: reply.ts,
+          provider: ai.provider,
+          model: ai.model,
         });
       }
       onUpdate(next);

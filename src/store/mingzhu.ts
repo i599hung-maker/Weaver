@@ -27,6 +27,10 @@ export interface ReportMeta {
   kind: 'book' | 'question';
   /** ISO 時間戳（生成當下） */
   createdAt: string;
+  /** AI 供應商 id（如 claude／antigravity；舊資料無此欄） */
+  provider?: string;
+  /** 模型 id（該供應商底下，如 opus／pro；舊資料無此欄） */
+  model?: string;
 }
 
 /** 命主：出生資料＋全部對話紀錄，對應 data/<id>.json 一個檔案 */

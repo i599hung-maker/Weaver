@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased] - 2026-07-11 15:50
+
+### Added（新增）
+- 命書版本化：「重新產生」不再覆蓋舊版，每次產生新增一筆（`b_` 唯一 key），舊版留在報告清單可開啟／下載／刪除
+- 報告模型標記：命書與單題報告記錄產生時的供應商/模型（ReportMeta 新增 provider/model），清單時間旁顯示小字、報告頁尾標註（如「・Antigravity・Gemini 3.1 Pro (High)」）
+
 ## [Unreleased] - 2026-07-11 15:15
 
 ### Added（新增）

@@ -1026,8 +1026,10 @@ export function renderBookHtml(opts: {
   /** 章節 key → 解析後 JSON 物件；解析失敗為 { __fallbackMd: 原始文字 } */
   chapters: Record<string, unknown>;
   generatedAt: string;
+  /** 產生模型的顯示字串（前端組好）：頁尾生成時間旁加註，未帶不顯示 */
+  modelLabel?: string;
 }): string {
-  const { title, name, header: h, book, chapters, generatedAt } = opts;
+  const { title, name, header: h, book, chapters, generatedAt, modelLabel } = opts;
   const m = book.meta;
   const hero = heroOf(chapters.hero);
   const ming = book.cells.find((c) => c.isMing);
@@ -1102,7 +1104,7 @@ export function renderBookHtml(opts: {
   ${compassSections(chapters.compass)}
 
   <footer>
-    <p class="disc"><span class="b">占驗紫微 · 命書</span><br>${escapeHtml(m.notes)}<br>盤面與應期由 LifePath 占驗引擎規則推算（流命引動法 · 疊星引動法）· 內容供自我參考，不是命定的判決<br>本命書於 ${escapeHtml(generatedAt)} 生成</p>
+    <p class="disc"><span class="b">占驗紫微 · 命書</span><br>${escapeHtml(m.notes)}<br>盤面與應期由 LifePath 占驗引擎規則推算（流命引動法 · 疊星引動法）· 內容供自我參考，不是命定的判決<br>本命書於 ${escapeHtml(generatedAt)} 生成${modelLabel ? `・${escapeHtml(modelLabel)}` : ''}</p>
   </footer>
 
 </div>
@@ -1120,8 +1122,10 @@ export function renderReportHtml(opts: {
   generatedAt: string;
   /** 原始提問：顯示在標題下方的小字（標題用 AI 生成的報告標題） */
   question?: string;
+  /** 產生模型的顯示字串（前端組好）：頁尾生成時間旁加註，未帶不顯示 */
+  modelLabel?: string;
 }): string {
-  const { title, name, header: h, sections, generatedAt, question } = opts;
+  const { title, name, header: h, sections, generatedAt, question, modelLabel } = opts;
   const metaCells: [string, string][] = [
     ['性別陰陽', `${h.yinYang}${h.gender}`],
     ['年干支', h.yearGz],
@@ -1169,7 +1173,7 @@ ${markdownToHtml(s.markdown)}
       </div>
     </header>
 ${sectionsHtml}
-    <footer class="footer">本報告於 ${escapeHtml(generatedAt)} 生成 · 內容供自我參考，不是命定的判決</footer>
+    <footer class="footer">本報告於 ${escapeHtml(generatedAt)} 生成${modelLabel ? `・${escapeHtml(modelLabel)}` : ''} · 內容供自我參考，不是命定的判決</footer>
   </div>
 <script>${BOOK_SCRIPT}</script>
 </body>

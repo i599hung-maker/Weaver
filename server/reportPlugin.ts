@@ -29,6 +29,8 @@ interface GenerateBody {
   /** AI 供應商/模型（未帶預設 claude/opus） */
   provider?: string;
   model?: string;
+  /** 頁尾標記用的顯示字串（前端組好，如「Antigravity・Gemini 3.1 Pro (High)」）；伺服器只透傳給模板 */
+  modelLabel?: string;
   /** 視覺化命書 v2：有 book 走 renderBookHtml（章節輸出為 JSON 槽位），無則走舊版逐章文章 */
   book?: BookData;
 }
@@ -40,6 +42,8 @@ interface RenderBody {
   sections: ReportSection[];
   /** 原始提問：報告頁標題下方的小字 */
   question?: string;
+  /** 頁尾標記用的顯示字串（前端組好）；伺服器只透傳給模板 */
+  modelLabel?: string;
 }
 
 interface StatusFile {
@@ -132,6 +136,7 @@ async function runGenerateJob(key: string, body: GenerateBody): Promise<void> {
         book: body.book,
         chapters,
         generatedAt: nowLabel(),
+        modelLabel: typeof body.modelLabel === 'string' ? body.modelLabel : undefined,
       });
     } else {
       const sections: ReportSection[] = outputs.map((c) => ({ title: c.title, markdown: c.text }));
@@ -141,6 +146,7 @@ async function runGenerateJob(key: string, body: GenerateBody): Promise<void> {
         header: body.header,
         sections,
         generatedAt: nowLabel(),
+        modelLabel: typeof body.modelLabel === 'string' ? body.modelLabel : undefined,
       });
     }
     ensureDir();
@@ -190,6 +196,7 @@ function handleRender(key: string, raw: string, res: ServerResponse): void {
     sections: body.sections,
     generatedAt: nowLabel(),
     question: typeof body.question === 'string' ? body.question : undefined,
+    modelLabel: typeof body.modelLabel === 'string' ? body.modelLabel : undefined,
   });
   ensureDir();
   writeFileSync(htmlPath(key), html);

@@ -8,6 +8,7 @@ import { buildAnalysis } from '../analysis/analysis';
 import { buildReportHeader } from '../analysis/reportPrompts';
 import { buildBookChapters, buildBookData } from '../analysis/reportBook';
 import { aiRequestParams, loadSettings } from '../store/settings';
+import { aiModelLabel } from '../ai/providers';
 import Chart from './Chart';
 import HoroscopeBar from './HoroscopeBar';
 import AnalysisPanel from './AnalysisPanel';
@@ -40,6 +41,13 @@ export default function RightPanel({ mingzhu, result, simple, onUpdate }: Props)
 
   const birthYear = Number(result.meta.castDate.split('-')[0]);
 
+  /** 最新命書 key：reports 中 kind==='book' 且 createdAt 最新的一筆；無紀錄退回舊 key（命主 id，相容既有命書） */
+  const bookKey = useMemo(() => {
+    const books = (mingzhu.reports ?? []).filter((r) => r.kind === 'book');
+    if (books.length === 0) return mingzhu.id;
+    return books.reduce((a, b) => (a.createdAt >= b.createdAt ? a : b)).key;
+  }, [mingzhu.reports, mingzhu.id]);
+
   const horoscope = useMemo(() => {
     if (!selDecadalBranch) return null;
     const palace = result.astrolabe.palaces.find((p) => p.earthlyBranch === selDecadalBranch);
@@ -54,7 +62,7 @@ export default function RightPanel({ mingzhu, result, simple, onUpdate }: Props)
     let timer: number | undefined;
     const poll = async () => {
       try {
-        const res = await fetch(`/api/report/${mingzhu.id}/status`);
+        const res = await fetch(`/api/report/${bookKey}/status`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = (await res.json()) as ReportStatus;
         if (stopped) return;
@@ -69,7 +77,7 @@ export default function RightPanel({ mingzhu, result, simple, onUpdate }: Props)
       stopped = true;
       if (timer !== undefined) window.clearTimeout(timer);
     };
-  }, [mingzhu.id, pollTick]);
+  }, [bookKey, pollTick]);
 
   /** 產生前先跳自家確認彈窗 */
   const generate = (regen: boolean) => {
@@ -88,7 +96,10 @@ export default function RightPanel({ mingzhu, result, simple, onUpdate }: Props)
       const reportStyle = loadSettings().reportStyle;
       const book = buildBookData(result, analysis, currentYear);
       const chapters = buildBookChapters(analysis, book, currentYear, mingzhu.profile, reportStyle);
-      const res = await fetch(`/api/report/${mingzhu.id}/generate`, {
+      // 每次產生都用新 key（比照單題報告 q_ 命名法）：舊版命書保留在清單，可比較不同模型產出
+      const key = `b_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+      const ai = aiRequestParams();
+      const res = await fetch(`/api/report/${key}/generate`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
@@ -97,15 +108,18 @@ export default function RightPanel({ mingzhu, result, simple, onUpdate }: Props)
           header: buildReportHeader(analysis, result.meta),
           book,
           chapters,
-          ...aiRequestParams(),
+          ...ai,
+          modelLabel: aiModelLabel(ai.provider, ai.model) ?? undefined,
         }),
       });
       if (res.status !== 202 && res.status !== 409) throw new Error(`HTTP ${res.status}`);
       const next = upsertReport(mingzhu, {
-        key: mingzhu.id,
+        key,
         title: bookTitle(reportStyle),
         kind: 'book',
         createdAt: new Date().toISOString(),
+        provider: ai.provider,
+        model: ai.model,
       });
       onUpdate(next);
       void saveMingzhu(next);
@@ -138,7 +152,7 @@ export default function RightPanel({ mingzhu, result, simple, onUpdate }: Props)
           )}
           {rs?.status === 'done' && (
             <>
-              <button className="primary" onClick={() => window.open(`/api/report/${mingzhu.id}`)}>
+              <button className="primary" onClick={() => window.open(`/api/report/${bookKey}`)}>
                 <BookOpen size={14} strokeWidth={1.8} /> 開啟完整命書
               </button>
               <button className="rc-sub" onClick={() => void generate(true)}>

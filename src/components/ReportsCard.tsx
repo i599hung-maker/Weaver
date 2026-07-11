@@ -3,6 +3,7 @@ import { BookOpen, Download, LoaderCircle, Trash2 } from 'lucide-react';
 import { saveMingzhu, type Mingzhu, type ReportMeta } from '../store/mingzhu';
 import { mergeReports, type BookStatusInfo } from '../store/reportList';
 import { loadSettings } from '../store/settings';
+import { aiModelLabel } from '../ai/providers';
 import ConfirmModal, { type ConfirmRequest } from './ConfirmModal';
 
 interface Props {
@@ -107,12 +108,15 @@ export default function ReportsCard({ mingzhu, onUpdate }: Props) {
     <div className="reports-card">
       <div className="rc-title">報告書</div>
       {error && <div className="pc-error">{error}</div>}
-      {list.map((r) => (
+      {list.map((r) => {
+        // 模型小字：id 轉 label（查不到顯示原始 id），舊資料無記錄則只顯示時間
+        const model = aiModelLabel(r.provider, r.model);
+        return (
         <div key={r.key} className="report-row">
           <button className="rr-open" onClick={() => window.open(`/api/report/${r.key}`)}>
             <BookOpen size={14} strokeWidth={1.8} />
             <span className="rr-name">{r.title}</span>
-            <span className="rr-time">{fmtTime(r.createdAt)}</span>
+            <span className="rr-time">{fmtTime(r.createdAt)}{model ? `・${model}` : ''}</span>
           </button>
           <span className="rr-actions">
             {(['jpg', 'pdf'] as const).map((f) => (
@@ -133,7 +137,8 @@ export default function ReportsCard({ mingzhu, onUpdate }: Props) {
             </button>
           </span>
         </div>
-      ))}
+        );
+      })}
       <ConfirmModal req={confirm} onClose={() => setConfirm(null)} />
     </div>
   );

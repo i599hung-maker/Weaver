@@ -33,6 +33,22 @@ describe('upsertReport', () => {
     expect(m.reports).toHaveLength(2);
     expect(m.reports!.find((r) => r.key === 'm_test')!.title).toBe('B');
   });
+
+  it('命書版本化：不同 b_ key 附加不覆蓋，舊版保留', () => {
+    let m = mz();
+    m = upsertReport(m, { key: 'b_aaa', title: '完整命書・白話風', kind: 'book', createdAt: '2026-07-10T00:00:00.000Z' });
+    m = upsertReport(m, { key: 'b_bbb', title: '完整命書・命理風', kind: 'book', createdAt: '2026-07-11T00:00:00.000Z' });
+    expect(m.reports).toHaveLength(2);
+    expect(m.reports!.find((r) => r.key === 'b_aaa')!.title).toBe('完整命書・白話風'); // 舊版未被改動
+  });
+
+  it('provider/model 欄位保留', () => {
+    let m = mz();
+    m = upsertReport(m, { key: 'b_aaa', title: 'A', kind: 'book', createdAt: '2026-07-10T00:00:00.000Z', provider: 'claude', model: 'opus' });
+    m = upsertReport(m, { key: 'q_1', title: 'Q', kind: 'question', createdAt: '2026-07-11T00:00:00.000Z', provider: 'antigravity', model: 'pro' });
+    expect(m.reports!.find((r) => r.key === 'b_aaa')).toMatchObject({ provider: 'claude', model: 'opus' });
+    expect(m.reports!.find((r) => r.key === 'q_1')).toMatchObject({ provider: 'antigravity', model: 'pro' });
+  });
 });
 
 describe('mergeReports', () => {
@@ -59,5 +75,29 @@ describe('mergeReports', () => {
 
   it('命書未完成且無紀錄時不出現', () => {
     expect(mergeReports(mz(), { done: false })).toHaveLength(0);
+  });
+
+  it('多版命書：全部保留並依時間新到舊，模型欄位跟著帶出', () => {
+    const m = mz({
+      reports: [
+        { key: 'b_v1', title: '完整命書・白話風', kind: 'book', createdAt: '2026-07-10T00:00:00.000Z', provider: 'claude', model: 'opus' },
+        { key: 'b_v2', title: '完整命書・白話風', kind: 'book', createdAt: '2026-07-11T00:00:00.000Z', provider: 'antigravity', model: 'pro' },
+      ],
+    });
+    const list = mergeReports(m, { done: false });
+    expect(list.map((r) => r.key)).toEqual(['b_v2', 'b_v1']); // 新到舊
+    expect(list[0]).toMatchObject({ provider: 'antigravity', model: 'pro' });
+    expect(list[1]).toMatchObject({ provider: 'claude', model: 'opus' });
+  });
+
+  it('多版命書＋舊 key 命書（key＝命主 id、無紀錄）並存：推導補缺不覆蓋新版', () => {
+    const m = mz({
+      reports: [
+        { key: 'b_v1', title: '完整命書・白話風', kind: 'book', createdAt: '2026-07-11T00:00:00.000Z', provider: 'claude', model: 'opus' },
+      ],
+    });
+    const list = mergeReports(m, { done: true, updatedAt: '2026-07-01T00:00:00.000Z' });
+    expect(list.map((r) => r.key)).toEqual(['b_v1', 'm_test']); // 舊命書推導維持、排在後面
+    expect(list.find((r) => r.key === 'm_test')!.provider).toBeUndefined(); // 舊資料無模型標記
   });
 });

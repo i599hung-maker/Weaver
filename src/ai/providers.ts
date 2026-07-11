@@ -43,3 +43,13 @@ export const AI_PROVIDERS: AiProvider[] = [
 export function findProvider(id: string): AiProvider | undefined {
   return AI_PROVIDERS.find((p) => p.id === id);
 }
+
+/** 供應商＋模型顯示字串（如「Antigravity・Gemini 3.1 Pro (High)」）；查不到的 id 原樣顯示，兩者皆缺回 null */
+export function aiModelLabel(providerId?: string, modelId?: string): string | null {
+  if (!providerId && !modelId) return null;
+  const p = providerId ? findProvider(providerId) : undefined;
+  const parts: string[] = [];
+  if (providerId) parts.push(p?.label ?? providerId);
+  if (modelId) parts.push(p?.models.find((m) => m.id === modelId)?.label ?? modelId);
+  return parts.join('・');
+}

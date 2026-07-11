@@ -1,7 +1,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { renderBookHtml, type BookCell, type BookData, type ReportHeader } from '../reportTemplate.js';
+import { renderBookHtml, renderReportHtml, type BookCell, type BookData, type ReportHeader } from '../reportTemplate.js';
 import { parseChapterJson } from '../reportPlugin.js';
 
 /**
@@ -298,5 +298,47 @@ describe('renderBookHtml', () => {
     mkdirSync(dir, { recursive: true });
     writeFileSync(join(dir, '__fixture__.html'), html);
     expect(html.startsWith('<!DOCTYPE html>')).toBe(true);
+  });
+});
+
+describe('頁尾模型標記 modelLabel', () => {
+  const LABEL = 'Antigravity・Gemini 3.1 Pro (High)';
+  const bookOpts = {
+    title: '測試・完整命書',
+    name: '測試命主',
+    header,
+    book,
+    chapters: buildChapters(),
+    generatedAt: '2026/7/11 12:00:00',
+  };
+  const reportOpts = {
+    title: '單題測試',
+    name: '測試命主',
+    header,
+    sections: [{ title: '', markdown: '內文' }],
+    generatedAt: '2026/7/11 12:00:00',
+  };
+
+  it('renderBookHtml：有帶時頁尾生成時間旁出現', () => {
+    const html = renderBookHtml({ ...bookOpts, modelLabel: LABEL });
+    expect(html).toContain(`本命書於 2026/7/11 12:00:00 生成・${LABEL}`);
+  });
+
+  it('renderBookHtml：沒帶時不出現', () => {
+    const html = renderBookHtml(bookOpts);
+    expect(html).toContain('本命書於 2026/7/11 12:00:00 生成<');
+    expect(html).not.toContain(LABEL);
+  });
+
+  it('renderReportHtml：有帶時頁尾生成時間旁出現（含 escape）', () => {
+    const html = renderReportHtml({ ...reportOpts, modelLabel: 'Claude・Opus <b>（深入）' });
+    expect(html).toContain('本報告於 2026/7/11 12:00:00 生成・Claude・Opus &lt;b&gt;（深入）');
+    expect(html).not.toContain('Opus <b>'); // 插值有 escape
+  });
+
+  it('renderReportHtml：沒帶時不出現', () => {
+    const html = renderReportHtml(reportOpts);
+    expect(html).toContain('本報告於 2026/7/11 12:00:00 生成 ·');
+    expect(html).not.toContain(LABEL);
   });
 });
