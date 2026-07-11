@@ -19,7 +19,7 @@ describe('命名', () => {
     expect(bookTitle('classic')).toBe('完整命書・書面版');
   });
   it('questionTitle 截 20 字、空白 fallback', () => {
-    expect(questionTitle('我明年適合換工作嗎？想聽聽事業與財運的整體分析')).toBe('我明年適合換工作嗎？想聽聽事業與財運');
+    expect(questionTitle('我明年適合換工作嗎？想聽聽事業與財運的整體分析')).toBe('我明年適合換工作嗎？想聽聽事業與財運的整');
     expect(questionTitle('  ')).toBe('單題報告');
   });
 });
