@@ -3,7 +3,7 @@ import type { Mingzhu, ReportMeta } from './mingzhu';
 /** 報告書清單邏輯：命名、記錄 upsert、與舊資料（無紀錄的命書／單題）合併推導 */
 
 export function bookTitle(style: 'plain' | 'classic'): string {
-  return style === 'plain' ? '完整命書・白話版' : '完整命書・書面版';
+  return style === 'plain' ? '完整命書・白話風' : '完整命書・命理風';
 }
 
 export function questionTitle(question: string): string {

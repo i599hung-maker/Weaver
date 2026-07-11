@@ -112,8 +112,8 @@ export default function SettingsModal({ open, settings, onClose, onChange }: Pro
             value={settings.reportStyle}
             onChange={(e) => onChange({ ...settings, reportStyle: e.target.value as Settings['reportStyle'] })}
           >
-            <option value="plain">白話（接地氣）</option>
-            <option value="classic">書面（正式）</option>
+            <option value="plain">白話風</option>
+            <option value="classic">命理風</option>
           </select>
         </label>
 

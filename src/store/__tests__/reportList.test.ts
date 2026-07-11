@@ -15,8 +15,8 @@ function mz(over: Partial<Mingzhu> = {}): Mingzhu {
 
 describe('命名', () => {
   it('bookTitle 依風格', () => {
-    expect(bookTitle('plain')).toBe('完整命書・白話版');
-    expect(bookTitle('classic')).toBe('完整命書・書面版');
+    expect(bookTitle('plain')).toBe('完整命書・白話風');
+    expect(bookTitle('classic')).toBe('完整命書・命理風');
   });
   it('questionTitle 截 20 字、空白 fallback', () => {
     expect(questionTitle('我明年適合換工作嗎？想聽聽事業與財運的整體分析')).toBe('我明年適合換工作嗎？想聽聽事業與財運的整');
