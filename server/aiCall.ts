@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process';
-import { tmpdir } from 'node:os';
+import { tmpdir, homedir } from 'node:os';
 
 /**
  * 統一 AI 呼叫入口：callAi(provider, model, prompt)。
@@ -13,6 +13,17 @@ export const CLAUDE_API_MODELS: Record<string, string> = {
   sonnet: 'claude-sonnet-5',
   opus: 'claude-opus-4-8',
   fable: 'claude-fable-5',
+};
+
+/** Antigravity 模型別名 → Antigravity CLI model id */
+export const ANTIGRAVITY_MODELS: Record<string, string> = {
+  'flash-low': 'Gemini 3.5 Flash (Low)',
+  'flash': 'Gemini 3.5 Flash (Medium)',
+  'flash-high': 'Gemini 3.5 Flash (High)',
+  'pro-low': 'Gemini 3.1 Pro (Low)',
+  'pro': 'Gemini 3.1 Pro (High)',
+  'sonnet-4.6': 'Claude Sonnet 4.6 (Thinking)',
+  'opus-4.6': 'Claude Opus 4.6 (Thinking)',
 };
 
 export const DEFAULT_TIMEOUT_MS = 600_000;
@@ -72,12 +83,60 @@ async function callClaudeApi(prompt: string, model: string, apiKey: string, time
     .join('');
 }
 
+/** 呼叫本機已登入的 Antigravity CLI（headless）；CLI 接受完整模型顯示名稱 */
+function callAntigravityCli(prompt: string, model: string, timeoutMs: number): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const env = { ...process.env };
+    const timeoutSec = Math.round(timeoutMs / 1000);
+    const args = ['-p', prompt, '--model', model, '--print-timeout', `${timeoutSec}s`];
+
+    const launch = (cmd: string, isFallback: boolean) => {
+      const child = spawn(cmd, args, {
+        env,
+        cwd: tmpdir(),
+        stdio: ['ignore', 'pipe', 'pipe'],
+      });
+      let out = '';
+      let err = '';
+      const timer = setTimeout(() => {
+        child.kill();
+        reject(new Error(`agy CLI 逾時（${timeoutSec} 秒）`));
+      }, timeoutMs);
+
+      child.stdout.on('data', (d) => (out += d));
+      child.stderr.on('data', (d) => (err += d));
+
+      let retrying = false;
+      child.on('error', (e: any) => {
+        clearTimeout(timer);
+        if (!isFallback && e.code === 'ENOENT') {
+          retrying = true;
+          launch(`${homedir()}/.local/bin/agy`, true);
+        } else {
+          reject(new Error(`agy CLI 啟動失敗：${e.message}`));
+        }
+      });
+      child.on('close', (code) => {
+        if (retrying) return;
+        clearTimeout(timer);
+        if (code === 0) resolve(out.trim());
+        else reject(new Error(`agy CLI 失敗（code ${code}）：${err.slice(0, 500)}`));
+      });
+    };
+    launch('agy', false);
+  });
+}
+
 export async function callAi(provider: string, model: string, prompt: string, timeoutMs = DEFAULT_TIMEOUT_MS): Promise<string> {
   if (provider === 'claude') {
     if (!CLAUDE_API_MODELS[model]) throw new Error(`未知的 Claude 模型：${model}`);
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (apiKey) return callClaudeApi(prompt, model, apiKey, timeoutMs);
     return callClaudeCli(prompt, model, timeoutMs);
+  }
+  if (provider === 'antigravity') {
+    if (!ANTIGRAVITY_MODELS[model]) throw new Error(`未知的 Antigravity 模型：${model}`);
+    return callAntigravityCli(prompt, ANTIGRAVITY_MODELS[model], timeoutMs);
   }
   throw new Error(`供應商 ${provider} 尚未支援`);
 }

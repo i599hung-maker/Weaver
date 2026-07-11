@@ -25,6 +25,19 @@ export const AI_PROVIDERS: AiProvider[] = [
       { id: 'fable', label: 'Fable（最強）' },
     ],
   },
+  {
+    id: 'antigravity',
+    label: 'Antigravity',
+    models: [
+      { id: 'flash-low', label: 'Gemini 3.5 Flash (Low)' },
+      { id: 'flash', label: 'Gemini 3.5 Flash (Medium)' },
+      { id: 'flash-high', label: 'Gemini 3.5 Flash (High)' },
+      { id: 'pro-low', label: 'Gemini 3.1 Pro (Low)' },
+      { id: 'pro', label: 'Gemini 3.1 Pro (High)' },
+      { id: 'sonnet-4.6', label: 'Claude Sonnet 4.6 (Thinking)' },
+      { id: 'opus-4.6', label: 'Claude Opus 4.6 (Thinking)' },
+    ],
+  },
 ];
 
 export function findProvider(id: string): AiProvider | undefined {

@@ -8,6 +8,20 @@ describe('AI_PROVIDERS', () => {
     expect(claude!.models.map((m) => m.id)).toEqual(['haiku', 'sonnet', 'opus', 'fable']);
   });
 
+  it('含 antigravity 供應商與兩個模型', () => {
+    const agy = findProvider('antigravity');
+    expect(agy).toBeDefined();
+    expect(agy!.models.map((m) => m.id)).toEqual([
+      'flash-low',
+      'flash',
+      'flash-high',
+      'pro-low',
+      'pro',
+      'sonnet-4.6',
+      'opus-4.6',
+    ]);
+  });
+
   it('每個供應商至少一個模型且 id 不重複', () => {
     const ids = AI_PROVIDERS.map((p) => p.id);
     expect(new Set(ids).size).toBe(ids.length);

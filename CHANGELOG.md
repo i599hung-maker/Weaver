@@ -1,5 +1,13 @@
 # Changelog
 
+## [Unreleased] - 2026-07-11 15:15
+
+### Added（新增）
+- AI 供應商新增 Antigravity：後端 spawn 本機已登入的 agy CLI（headless `-p --model`，找不到指令時退回 `~/.local/bin/agy`），模型含 Gemini 3.5 Flash（Low/Medium/High）、Gemini 3.1 Pro（Low/High）、Claude Sonnet/Opus 4.6 (Thinking)
+
+### Fixed（修正）
+- 聊天等待提示「Claude 思考中…」寫死供應商名稱：改依設定的供應商顯示（選 Antigravity 時顯示「Antigravity 思考中…」）
+
 ## [Unreleased] - 2026-07-11 14:05
 
 ### Added（新增）

@@ -5,6 +5,7 @@ import { buildAnalysis } from '../analysis/analysis';
 import { buildChatPrompt } from '../analysis/chatPrompt';
 import { buildReportHeader } from '../analysis/reportPrompts';
 import { aiRequestParams, loadSettings } from '../store/settings';
+import { findProvider } from '../ai/providers';
 import { questionTitle, upsertReport } from '../store/reportList';
 import ProfileCard from './ProfileCard';
 import ReportsCard from './ReportsCard';
@@ -168,6 +169,8 @@ export default function ChatPanel({ mingzhu, result, activeConvId, onSelectConv,
 
   const activeConv = mingzhu.conversations.find((c) => c.id === activeConvId) ?? null;
   const msgCount = activeConv?.messages.length ?? 0;
+  /** 等待提示依當前設定的供應商顯示名稱，避免切換供應商後仍寫死 Claude */
+  const waitLabel = `${findProvider(loadSettings().aiProvider)?.label ?? 'AI'} 思考中…（本機 headless，可能數分鐘）`;
 
   useEffect(() => {
     msgsRef.current?.scrollTo({ top: msgsRef.current.scrollHeight });
@@ -360,7 +363,7 @@ export default function ChatPanel({ mingzhu, result, activeConvId, onSelectConv,
               </div>
             )}
           </div>
-          {sending && <div className="chat-wait">Claude 思考中…（本機 headless，可能數分鐘）</div>}
+          {sending && <div className="chat-wait">{waitLabel}</div>}
           {error && (
             <div className="chat-error">
               <span>失敗：{error}</span>
@@ -412,7 +415,7 @@ export default function ChatPanel({ mingzhu, result, activeConvId, onSelectConv,
             );
           })}
           {sendingConvId === activeConv.id && (
-            <div className="chat-wait">Claude 思考中…（本機 headless，可能數分鐘）</div>
+            <div className="chat-wait">{waitLabel}</div>
           )}
         </div>
 
