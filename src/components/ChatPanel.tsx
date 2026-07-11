@@ -323,23 +323,28 @@ export default function ChatPanel({ mingzhu, result, activeConvId, onSelectConv,
         <div className="conv-home">
           <div className="conv-list">
             {mingzhu.conversations.length > 0 ? (
-              mingzhu.conversations.map((c) => (
-                <div key={c.id} className="conv-row" onClick={() => onSelectConv(c.id)}>
-                  <MessageSquare size={15} strokeWidth={1.8} className="cr-icon" />
-                  <span className="cr-title">{c.title}</span>
-                  <button
-                    className="sb-del"
-                    title="刪除對話"
-                    disabled={sending}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      void removeConv(c.id);
-                    }}
-                  >
-                    <Trash2 size={13} strokeWidth={1.8} />
-                  </button>
-                </div>
-              ))
+              <div className="reports-card">
+                <div className="rc-title">對話紀錄</div>
+                {mingzhu.conversations.map((c) => (
+                  <div key={c.id} className="report-row">
+                    <button className="rr-open" onClick={() => onSelectConv(c.id)}>
+                      <MessageSquare size={14} strokeWidth={1.8} />
+                      <span className="rr-name">{c.title}</span>
+                      <span className="rr-time">{fmtTime(c.createdAt)}</span>
+                    </button>
+                    <span className="rr-actions">
+                      <button
+                        className="rr-del"
+                        title="刪除對話"
+                        disabled={sending}
+                        onClick={() => void removeConv(c.id)}
+                      >
+                        <Trash2 size={13} strokeWidth={1.8} />
+                      </button>
+                    </span>
+                  </div>
+                ))}
+              </div>
             ) : (
               <div className="conv-none">
                 尚無對話。在下方輸入問題即可開始，例如「今年適合換工作嗎？」
