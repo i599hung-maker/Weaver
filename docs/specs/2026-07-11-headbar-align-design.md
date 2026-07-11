@@ -18,6 +18,10 @@
 - 中欄暫時性錯誤橫幅（banner)出現時會把標題往下推，橫幅關閉即恢復——既有行為不處理。
 - `src/App.css` 有使用者未提交的星空背景 WIP 且與 `.chat-head`/`.rp-tabs` 交疊，本次修改不單獨 commit，隨使用者下次「推播上去」一併進版。
 
+## 後續調整（同日）
+
+高度對齊確認後，使用者決定隱藏三條底線：`border-bottom` 改為 `1px solid transparent`（保留佔位，54px 對齊幾何不變，想恢復換回 `var(--border)` 即可）。
+
 ## 驗收
 
 Playwright 截圖：三條分隔線同高（左欄有線），lint/build 通過。
