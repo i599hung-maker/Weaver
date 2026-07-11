@@ -93,9 +93,10 @@ function sendJson(res: ServerResponse, status: number, payload: unknown): void {
 
 function readBody(req: IncomingMessage): Promise<string> {
   return new Promise((resolve, reject) => {
-    let body = '';
-    req.on('data', (c) => (body += c));
-    req.on('end', () => resolve(body));
+    // 收集 Buffer 後一次性以 UTF-8 解碼：避免多位元組中文字被切在 chunk 邊界而亂碼
+    const chunks: Buffer[] = [];
+    req.on('data', (c: Buffer) => chunks.push(c));
+    req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
     req.on('error', reject);
   });
 }
@@ -265,7 +266,16 @@ export async function handleExport(key: string, raw: string, res: ServerResponse
   if (!existsSync(htmlPath(key))) return sendJson(res, 404, { error: '找不到報告' });
   if (format !== 'jpg' && format !== 'pdf') return sendJson(res, 400, { error: 'format 需為 jpg、pdf 或 md' });
   const { chromium } = await import('playwright');
-  const browser = await chromium.launch();
+  let browser;
+  try {
+    browser = await chromium.launch();
+  } catch (e) {
+    const msg = (e as Error).message;
+    if (/Executable doesn't exist|playwright install/i.test(msg)) {
+      return sendJson(res, 500, { error: 'JPG／PDF 匯出需要 Playwright 瀏覽器，請在專案目錄執行：npx playwright install chromium（MD 匯出不受影響）' });
+    }
+    return sendJson(res, 500, { error: `瀏覽器啟動失敗：${msg}` });
+  }
   try {
     const page = await browser.newPage({
       reducedMotion: 'reduce',
@@ -328,7 +338,9 @@ export default function reportPlugin(): Plugin {
             if (action === 'export') {
               if (req.method !== 'POST') return sendJson(res, 405, { error: 'method not allowed' });
               const raw = await readBody(req);
-              return handleExport(key, raw, res);
+              // 必須 await：handleExport 是 async，直接 return 會讓其 rejection 逃出這個 try/catch
+              // 變成 unhandled rejection 而拖垮整個 dev server（例：Playwright 瀏覽器未安裝）。
+              return await handleExport(key, raw, res);
             }
             return sendJson(res, 404, { error: 'not found' });
           } catch (e) {

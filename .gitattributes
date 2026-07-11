@@ -1,0 +1,2 @@
+# 跨 Mac/Windows 同步：統一以 LF 儲存文字檔，避免換行差異造成假 diff
+* text=auto eol=lf

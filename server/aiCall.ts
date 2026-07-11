@@ -33,30 +33,35 @@ function callClaudeCli(prompt: string, model: string, timeoutMs: number): Promis
   return new Promise((resolve, reject) => {
     const env = { ...process.env };
     delete env.CLAUDECODE; // 允許在 Claude Code 之外以子行程執行
-    const child = spawn('claude', ['-p', '--output-format', 'text', '--model', model], {
+    // prompt 以「命令列參數」傳入，不走 stdin：Windows 上 claude CLI（Bun 打包）從 pipe 讀 stdin
+    // 會間歇性崩潰（exit code 3）；Node 會以 UTF-16 正確傳參給 CreateProcess，中文不會亂碼。
+    const child = spawn('claude', ['-p', prompt, '--output-format', 'text', '--model', model], {
       env,
       cwd: tmpdir(),
-      stdio: ['pipe', 'pipe', 'pipe'],
+      stdio: ['ignore', 'pipe', 'pipe'],
     });
-    let out = '';
-    let err = '';
+    // 收集 Buffer 後一次性 UTF-8 解碼：避免多位元組中文被切在 chunk 邊界而亂碼
+    const outChunks: Buffer[] = [];
+    const errChunks: Buffer[] = [];
     const timer = setTimeout(() => {
       child.kill();
       reject(new Error(`claude CLI 逾時（${Math.round(timeoutMs / 1000)} 秒）`));
     }, timeoutMs);
-    child.stdout.on('data', (d) => (out += d));
-    child.stderr.on('data', (d) => (err += d));
+    child.stdout.on('data', (d: Buffer) => outChunks.push(d));
+    child.stderr.on('data', (d: Buffer) => errChunks.push(d));
     child.on('error', (e) => {
       clearTimeout(timer);
       reject(new Error(`claude CLI 啟動失敗：${e.message}`));
     });
     child.on('close', (code) => {
       clearTimeout(timer);
-      if (code === 0) resolve(out.trim());
+      const out = Buffer.concat(outChunks).toString('utf8').trim();
+      const err = Buffer.concat(errChunks).toString('utf8');
+      // claude CLI（Bun 打包）在 Windows 上常於「印完完整輸出後」的結束清理階段崩潰（code 3），
+      // 此時 stdout 已是完整結果 → 有輸出就採用，不因結束碼非 0 而丟棄好的回應。
+      if (out) resolve(out);
       else reject(new Error(`claude CLI 失敗（code ${code}）：${err.slice(0, 500)}`));
     });
-    child.stdin.write(prompt);
-    child.stdin.end();
   });
 }
 
@@ -96,15 +101,15 @@ function callAntigravityCli(prompt: string, model: string, timeoutMs: number): P
         cwd: tmpdir(),
         stdio: ['ignore', 'pipe', 'pipe'],
       });
-      let out = '';
-      let err = '';
+      const outChunks: Buffer[] = [];
+      const errChunks: Buffer[] = [];
       const timer = setTimeout(() => {
         child.kill();
         reject(new Error(`agy CLI 逾時（${timeoutSec} 秒）`));
       }, timeoutMs);
 
-      child.stdout.on('data', (d) => (out += d));
-      child.stderr.on('data', (d) => (err += d));
+      child.stdout.on('data', (d: Buffer) => outChunks.push(d));
+      child.stderr.on('data', (d: Buffer) => errChunks.push(d));
 
       let retrying = false;
       child.on('error', (e: any) => {
@@ -119,6 +124,8 @@ function callAntigravityCli(prompt: string, model: string, timeoutMs: number): P
       child.on('close', (code) => {
         if (retrying) return;
         clearTimeout(timer);
+        const out = Buffer.concat(outChunks).toString('utf8');
+        const err = Buffer.concat(errChunks).toString('utf8');
         if (code === 0) resolve(out.trim());
         else reject(new Error(`agy CLI 失敗（code ${code}）：${err.slice(0, 500)}`));
       });

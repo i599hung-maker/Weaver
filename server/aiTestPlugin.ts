@@ -34,9 +34,10 @@ export default function aiTestPlugin(): Plugin {
           res.end();
           return;
         }
-        let body = '';
-        req.on('data', (c) => (body += c));
+        const chunks: Buffer[] = [];
+        req.on('data', (c: Buffer) => chunks.push(c));
         req.on('end', async () => {
+          const body = Buffer.concat(chunks).toString('utf8'); // 一次性 UTF-8 解碼，避免中文跨 chunk 亂碼
           res.setHeader('content-type', 'application/json');
           try {
             const { provider, model } = JSON.parse(body) as { provider?: string; model?: string };

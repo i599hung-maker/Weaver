@@ -58,10 +58,11 @@ export default function storagePlugin(): Plugin {
           const filePath = join(DATA_DIR, `${id}.json`);
 
           if (req.method === 'PUT') {
-            let body = '';
-            req.on('data', (c) => (body += c));
+            const chunks: Buffer[] = [];
+            req.on('data', (c: Buffer) => chunks.push(c));
             req.on('end', () => {
               try {
+                const body = Buffer.concat(chunks).toString('utf8'); // 一次性 UTF-8 解碼，避免中文跨 chunk 亂碼
                 const record = JSON.parse(body) as unknown;
                 mkdirSync(DATA_DIR, { recursive: true });
                 writeFileSync(filePath, JSON.stringify(record, null, 2));
