@@ -20,6 +20,15 @@ export interface Conversation {
   messages: ChatMessage[];
 }
 
+/** 一本已生成（或生成中）的報告：完整命書或單題報告 */
+export interface ReportMeta {
+  key: string;
+  title: string;
+  kind: 'book' | 'question';
+  /** ISO 時間戳（生成當下） */
+  createdAt: string;
+}
+
 /** 命主：出生資料＋全部對話紀錄，對應 data/<id>.json 一個檔案 */
 export interface Mingzhu {
   id: string;
@@ -27,6 +36,8 @@ export interface Mingzhu {
   birth: BirthInput;
   /** 個人背景自述（選填）：職業、感情、重大事件年份等，餵給 AI 貼近解讀 */
   profile?: string;
+  /** 報告書紀錄（新生成才有；舊報告由 mergeReports 推導） */
+  reports?: ReportMeta[];
   createdAt: string;
   conversations: Conversation[];
 }
