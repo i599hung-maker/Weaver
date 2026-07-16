@@ -28,6 +28,18 @@ export const ANTIGRAVITY_MODELS: Record<string, string> = {
 
 export const DEFAULT_TIMEOUT_MS = 600_000;
 
+/** 逾時專屬錯誤：呼叫端據此判斷可否重試（其他錯誤如登入失效重試也沒用） */
+export class AiTimeoutError extends Error {}
+
+/**
+ * claude CLI 額度用完時會把上限訊息印到 stdout 正常結束（如
+ * 「You've hit your limit · resets 7:50pm」），若不攔截會被當成章節內容存進續跑快取。
+ * 上限訊息必是單行短輸出，長度門檻避免長章節剛好引用到字眼被誤殺。
+ */
+export function isUsageLimitMessage(out: string): boolean {
+  return out.length < 200 && /(hit|reached) your (usage )?limit|usage limit reached/i.test(out);
+}
+
 /** 呼叫本機已登入的 Claude Code（headless）；CLI 接受 haiku/sonnet/opus/fable 別名 */
 function callClaudeCli(prompt: string, model: string, timeoutMs: number): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -45,7 +57,12 @@ function callClaudeCli(prompt: string, model: string, timeoutMs: number): Promis
     const errChunks: Buffer[] = [];
     const timer = setTimeout(() => {
       child.kill();
-      reject(new Error(`claude CLI 逾時（${Math.round(timeoutMs / 1000)} 秒）`));
+      const err = Buffer.concat(errChunks).toString('utf8').trim();
+      reject(
+        new AiTimeoutError(
+          `claude CLI 逾時（${Math.round(timeoutMs / 1000)} 秒）${err ? `：${err.slice(0, 300)}` : ''}`,
+        ),
+      );
     }, timeoutMs);
     child.stdout.on('data', (d: Buffer) => outChunks.push(d));
     child.stderr.on('data', (d: Buffer) => errChunks.push(d));
@@ -59,7 +76,8 @@ function callClaudeCli(prompt: string, model: string, timeoutMs: number): Promis
       const err = Buffer.concat(errChunks).toString('utf8');
       // claude CLI（Bun 打包）在 Windows 上常於「印完完整輸出後」的結束清理階段崩潰（code 3），
       // 此時 stdout 已是完整結果 → 有輸出就採用，不因結束碼非 0 而丟棄好的回應。
-      if (out) resolve(out);
+      if (isUsageLimitMessage(out)) reject(new Error(`Claude 用量已達上限，重置後再產生即可續跑：${out.slice(0, 200)}`));
+      else if (out) resolve(out);
       else reject(new Error(`claude CLI 失敗（code ${code}）：${err.slice(0, 500)}`));
     });
   });
@@ -69,6 +87,7 @@ async function callClaudeApi(prompt: string, model: string, apiKey: string, time
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     signal: AbortSignal.timeout(timeoutMs),
+    // fetch 逾時拋 DOMException（TimeoutError），在 callAi 統一轉成 AiTimeoutError
     headers: {
       'content-type': 'application/json',
       'x-api-key': apiKey,
@@ -105,7 +124,8 @@ function callAntigravityCli(prompt: string, model: string, timeoutMs: number): P
       const errChunks: Buffer[] = [];
       const timer = setTimeout(() => {
         child.kill();
-        reject(new Error(`agy CLI 逾時（${timeoutSec} 秒）`));
+        const err = Buffer.concat(errChunks).toString('utf8').trim();
+        reject(new AiTimeoutError(`agy CLI 逾時（${timeoutSec} 秒）${err ? `：${err.slice(0, 300)}` : ''}`));
       }, timeoutMs);
 
       child.stdout.on('data', (d: Buffer) => outChunks.push(d));
@@ -138,7 +158,16 @@ export async function callAi(provider: string, model: string, prompt: string, ti
   if (provider === 'claude') {
     if (!CLAUDE_API_MODELS[model]) throw new Error(`未知的 Claude 模型：${model}`);
     const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (apiKey) return callClaudeApi(prompt, model, apiKey, timeoutMs);
+    if (apiKey) {
+      try {
+        return await callClaudeApi(prompt, model, apiKey, timeoutMs);
+      } catch (e) {
+        if ((e as Error).name === 'TimeoutError') {
+          throw new AiTimeoutError(`Anthropic API 逾時（${Math.round(timeoutMs / 1000)} 秒）`);
+        }
+        throw e;
+      }
+    }
     return callClaudeCli(prompt, model, timeoutMs);
   }
   if (provider === 'antigravity') {

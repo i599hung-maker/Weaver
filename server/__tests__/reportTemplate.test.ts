@@ -72,6 +72,7 @@ const book: BookData = {
     { year: 2026, gz: '丙午', age: 33, isCurrent: true, isPast: false, marks: ['流命引動'], weight: 2, reasons: ['丙午年流年命宮走到大限夫妻（午宮）→ 愛情主題引動'] },
     { year: 2028, gz: '戊申', age: 35, isCurrent: false, isPast: false, marks: ['流命引動'], weight: 2, reasons: ['戊申年流年命宮走到大限命宮（申宮）→ 本命主題引動'] },
     { year: 2031, gz: '辛亥', age: 38, isCurrent: false, isPast: false, marks: ['流命引動', '同星相疊'], weight: 5, reasons: ['辛亥年流年命宮走到大限官祿（亥宮）→ 事業主題引動', '辛亥年流年忌為文昌，與大限忌同星相疊（酉宮）'] },
+    { year: 2033, gz: '癸丑', age: 40, isCurrent: false, isPast: false, marks: ['同星相疊'], weight: 3, reasons: ['癸丑年流年祿為廉貞，與生年祿同星相疊（戌宮）'] },
   ],
   topicLocs: {
     benming: '命宮 · 甲戌 · 廉貞(利)化祿 天府(廟) 地空',
@@ -144,6 +145,7 @@ const CHAPTER_TEXTS: Record<string, string> = {
       { year: 2026, title: '今年：感情定奪年', desc: '感情議題正面引動，十年僅此一次。', why: '流年命宮走到大限夫妻（午）。', advice: '感情大事可以定；錢和感情分開處理。' },
       { year: 2028, title: '十年總結年', desc: '這十年的感情與職涯在這年做總整理。', why: '流年命宮疊大限命宮（申），換限前一年。', advice: '收尾定調，不開新局。' },
       { year: 2031, title: '事業升級年', desc: '升遷、擴權、轉換舞台的機會最熟。', why: '流年命宮走到大限官祿（亥）；文昌忌疊忌（酉宮）。', advice: '機會全力爭取；文件找第二雙眼睛複核。' },
+      { year: 2033, title: '雙祿進財年', desc: '正財偏財同動，資源自己找上門。', why: '流年廉貞祿疊生年廉貞祿於戌宮，雙祿為吉應。', advice: '擴張、置產、談加薪都是好時機。' },
     ],
   }),
   compass: JSON.stringify({
@@ -269,6 +271,7 @@ describe('renderBookHtml', () => {
     for (const e of book.events) expect(html).toContain(`<div class="yy">${e.year}</div>`);
     expect(html).toContain('<span class="mk m2">災宮引動</span>'); // 2023
     expect(html).toContain('<span class="mk m3">雙忌</span>'); // 2024 權重3＋忌
+    expect(html).toContain('<span class="mk m4">雙祿</span>'); // 2033 權重3＋祿
     expect(html).toContain('class="ev hot"'); // 2026 今年
     expect(html).toContain('丙午 · 33歲 · 今年');
     expect(html).toContain('<em>為什麼</em>');

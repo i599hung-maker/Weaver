@@ -96,8 +96,10 @@ export default function RightPanel({ mingzhu, result, simple, onUpdate }: Props)
       const reportStyle = loadSettings().reportStyle;
       const book = buildBookData(result, analysis, currentYear);
       const chapters = buildBookChapters(analysis, book, currentYear, mingzhu.profile, reportStyle);
-      // 每次產生都用新 key（比照單題報告 q_ 命名法）：舊版命書保留在清單，可比較不同模型產出
-      const key = `b_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+      // 每次產生都用新 key（比照單題報告 q_ 命名法）：舊版命書保留在清單，可比較不同模型產出。
+      // 例外：生成失敗後重試沿用原 key，伺服器才找得到 <key>.chapters.json 沿用已完成章節續跑
+      const key =
+        rs?.status === 'error' ? bookKey : `b_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
       const ai = aiRequestParams();
       const res = await fetch(`/api/report/${key}/generate`, {
         method: 'POST',

@@ -1,8 +1,9 @@
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { join } from 'node:path';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Plugin } from 'vite';
-import { callAi } from './aiCall.js';
+import { AiTimeoutError, callAi } from './aiCall.js';
 import { renderBookHtml, renderReportHtml, type BookData, type ReportHeader, type ReportSection } from './reportTemplate.js';
 import { renderBookMarkdown, renderReportMarkdown } from './reportMarkdown.js';
 
@@ -75,6 +76,10 @@ function mdPath(key: string): string {
   return join(REPORT_DIR, `${key}.md`);
 }
 
+function partialPath(key: string): string {
+  return join(REPORT_DIR, `${key}.chapters.json`);
+}
+
 function ensureDir(): void {
   mkdirSync(REPORT_DIR, { recursive: true });
 }
@@ -119,14 +124,98 @@ export function parseChapterJson(text: string): Record<string, unknown> | null {
   }
 }
 
-/** 背景逐章生成 → 全部完成才渲染寫 HTML */
+/* ---------- 章節續跑（partial 檔） ----------
+ * 逐章生成每完成一章就寫進 <key>.chapters.json；中途失敗（逾時、CLI 掛掉、dev server 重啟）
+ * 後用同 key 重新產生時，provider/model/prompt 都沒變的章節直接沿用，只補跑缺的。
+ * 全書完成即刪 partial 檔——「重新產生已完成的命書」用新 key，天然不會誤沿用。 */
+
+interface PartialFile {
+  provider: string;
+  model: string;
+  chapters: Record<string, { hash: string; text: string }>;
+}
+
+export function promptHash(prompt: string): string {
+  return createHash('sha256').update(prompt).digest('hex');
+}
+
+/** 毀損或格式不符一律當無檔：續跑只是最佳化，不能因它壞掉擋住生成 */
+function readPartialFile(key: string): PartialFile | null {
+  try {
+    const v = JSON.parse(readFileSync(partialPath(key), 'utf8')) as PartialFile;
+    return v && typeof v === 'object' && v.chapters && typeof v.chapters === 'object' ? v : null;
+  } catch {
+    return null;
+  }
+}
+
+/** 可沿用章節：provider/model 不同整份作廢；prompt hash 不同該章作廢（防中途改資料或換模型的品質混雜） */
+export function readResumable(
+  key: string,
+  provider: string,
+  model: string,
+  chapters: { key: string; prompt: string }[],
+): Record<string, string> {
+  const p = readPartialFile(key);
+  if (!p || p.provider !== provider || p.model !== model) return {};
+  const out: Record<string, string> = {};
+  for (const c of chapters) {
+    const e = p.chapters[c.key];
+    if (e && e.hash === promptHash(c.prompt)) out[c.key] = e.text;
+  }
+  return out;
+}
+
+export function savePartialChapter(
+  key: string,
+  provider: string,
+  model: string,
+  chapterKey: string,
+  hash: string,
+  text: string,
+): void {
+  ensureDir();
+  const prev = readPartialFile(key);
+  const base: PartialFile =
+    prev && prev.provider === provider && prev.model === model ? prev : { provider, model, chapters: {} };
+  base.chapters[chapterKey] = { hash, text };
+  writeFileSync(partialPath(key), JSON.stringify(base));
+}
+
+export function deletePartial(key: string): void {
+  rmSync(partialPath(key), { force: true });
+}
+
+/** 逾時自動重試一次：opus 單章偶爾超過單次上限，重試可救回，免得整本重跑（其他錯誤照舊直接拋） */
+export async function retryOnTimeout(call: () => Promise<string>, label: string): Promise<string> {
+  try {
+    return await call();
+  } catch (e) {
+    if (!(e instanceof AiTimeoutError)) throw e;
+    console.error(`[report] ${label} ${e.message}，重試一次`);
+    return await call();
+  }
+}
+
+/** 背景逐章生成 → 全部完成才渲染寫 HTML；中途失敗留 partial 檔供同 key 續跑 */
 async function runGenerateJob(key: string, body: GenerateBody): Promise<void> {
   const total = body.chapters.length;
+  const provider = body.provider ?? 'claude';
+  const model = body.model ?? 'opus';
   const outputs: { key: string; title: string; text: string }[] = [];
   try {
+    const resumable = readResumable(key, provider, model, body.chapters);
+    const reused = Object.keys(resumable).length;
+    if (reused > 0) console.log(`[report] ${key} 沿用已完成章節 ${reused}/${total}，續跑其餘章節`);
     writeStatus(key, { status: 'running', done: 0, total });
     for (const chapter of body.chapters) {
-      const text = await callAi(body.provider ?? 'claude', body.model ?? 'opus', chapter.prompt);
+      let text = resumable[chapter.key];
+      if (text === undefined) {
+        const started = Date.now();
+        text = await retryOnTimeout(() => callAi(provider, model, chapter.prompt), `${key} ${chapter.title}`);
+        console.log(`[report] ${key} ${chapter.title} 完成（${Math.round((Date.now() - started) / 1000)} 秒）`);
+        savePartialChapter(key, provider, model, chapter.key, promptHash(chapter.prompt), text);
+      }
       outputs.push({ key: chapter.key, title: chapter.title, text });
       writeStatus(key, { status: 'running', done: outputs.length, total });
     }
@@ -159,6 +248,7 @@ async function runGenerateJob(key: string, body: GenerateBody): Promise<void> {
     ensureDir();
     writeFileSync(htmlPath(key), html);
     writeFileSync(mdPath(key), md); // MD 源檔：供 export format=md 直接下載
+    deletePartial(key); // 全書完成，續跑暫存不再需要
     writeStatus(key, { status: 'done', done: total, total });
   } catch (e) {
     writeStatus(key, { status: 'error', done: outputs.length, total, error: (e as Error).message });
@@ -247,6 +337,7 @@ export function handleDeleteReport(key: string): void {
   rmSync(htmlPath(key), { force: true });
   rmSync(mdPath(key), { force: true });
   rmSync(statusPath(key), { force: true });
+  deletePartial(key);
 }
 
 /**

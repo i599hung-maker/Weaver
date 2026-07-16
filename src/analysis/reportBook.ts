@@ -86,15 +86,18 @@ function natalMutText(yearStem: string): string {
 
 /** 年齡級距（虛歲）：過往池回看年數與筆數上限 */
 function pastQuota(age: number): { lookback: number; max: number } {
-  if (age < 35) return { lookback: 8, max: 4 };
-  if (age <= 55) return { lookback: 15, max: 6 };
-  return { lookback: 25, max: 8 };
+  if (age < 35) return { lookback: 8, max: 6 };
+  if (age <= 55) return { lookback: 15, max: 9 };
+  return { lookback: 25, max: 12 };
 }
+
+/** 未來池筆數上限 */
+const FUTURE_MAX = 12;
 
 /**
  * 重點應期拆兩池（年份升冪合併輸出）：
  * - 過往對答案：回看範圍與筆數隨虛歲級距，權重優先、同權取較近年，且虛歲不早於 15
- * - 未來引動：今年~+22 年權重前 8，今年命中必收
+ * - 未來引動：今年~+22 年權重前 12，今年命中必收
  */
 export function selectKeyEvents(analysis: ChartAnalysis, currentYear: number, birthYear: number): BookEvent[] {
   const quota = pastQuota(currentYear - birthYear + 1);
@@ -128,9 +131,9 @@ export function selectKeyEvents(analysis: ChartAnalysis, currentYear: number, bi
     .sort((a, b) => b.weight - a.weight || b.year - a.year)
     .slice(0, quota.max);
   const futureAll = all.filter((e) => !e.isPast).sort((a, b) => b.weight - a.weight || a.year - b.year);
-  let future = futureAll.slice(0, 8);
+  let future = futureAll.slice(0, FUTURE_MAX);
   const cur = futureAll.find((e) => e.isCurrent);
-  if (cur && !future.includes(cur)) future = [...future.slice(0, 7), cur];
+  if (cur && !future.includes(cur)) future = [...future.slice(0, FUTURE_MAX - 1), cur];
   return [...past, ...future].sort((a, b) => a.year - b.year);
 }
 
@@ -319,7 +322,7 @@ function eventsPrompt(analysis: ChartAnalysis, book: BookData, currentYear: numb
   const past = book.events.filter((e) => e.isPast);
   const future = book.events.filter((e) => !e.isPast);
   const allYears = book.events.map((e) => e.year).join('、');
-  return `你是占驗派紫微斗數論命助手。以下是規則引擎推算的重點應期年份與原因（占驗派流命引動法＋疊星引動法，程式計算，勿自行增減），請為視覺化命書的「重點應期」時間軸產生每年的解讀。時間軸分兩段：過往年份用來對答案驗盤，未來年份給建議。
+  return `你是占驗派紫微斗數論命助手。以下是規則引擎推算的重點應期年份與原因（占驗派流命引動法＋疊星引動法，程式計算，勿自行增減），請為視覺化命書的「重點應期」時間軸產生每年的解讀。時間軸分兩段：過往年份用來對答案驗盤，未來年份給建議。疊星吉凶：雙祿（祿疊祿、雙祿交會）為吉應（進財、升遷、喜事類），雙忌為凶應（破財、災咎類），祿忌交會吉中藏凶；解讀方向須順著該年引動的吉凶寫，吉年寫把握點、凶年寫防範點。
 
 【命主】${headerDesc(analysis)}。今年西元 ${currentYear} 年。${book.meta.natalMutText}。
 

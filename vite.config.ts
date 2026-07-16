@@ -21,5 +21,5 @@ export default defineConfig({
     reportPlugin(),
     aiTestPlugin(),
   ],
-  server: isWin ? { host: '127.0.0.1', https: true } : {},
+  server: isWin ? { host: '127.0.0.1', https: {} } : {},
 })

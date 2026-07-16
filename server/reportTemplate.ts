@@ -556,6 +556,7 @@ const BOOK_CSS = `
   .mk.m1{color:var(--azure); border:1px solid var(--azure)}
   .mk.m2{color:var(--cinnabar); border:1px solid var(--cinnabar)}
   .mk.m3{color:#b9a5ec; border:1px solid #8b74cf}
+  .mk.m4{color:var(--jade); border:1px solid var(--jade)}
   .ev h5{font-family:var(--serif); font-weight:900; font-size:19px; color:var(--silk); margin-bottom:6px; letter-spacing:.04em}
   .ev p{font-size:16px; color:var(--silk)}
   .ev p b{color:var(--gold-br); font-weight:600}
@@ -904,10 +905,11 @@ function limsSection(book: BookData, ch: unknown): string {
   </div>`;
 }
 
-/** 應期 mk：災宮引動→m2、reasons 含忌且 weight>=3→m3、其餘→m1 */
+/** 應期 mk：災宮引動→m2、reasons 含忌且 weight>=3→m3 雙忌、含祿且 weight>=3→m4 雙祿、其餘→m1 */
 function eventMark(e: BookEvent): { cls: string; text: string } {
   if (e.marks.includes('災宮引動')) return { cls: 'm2', text: e.marks[0] ?? '災宮引動' };
   if (e.weight >= 3 && e.reasons.some((r) => r.includes('忌'))) return { cls: 'm3', text: '雙忌' };
+  if (e.weight >= 3 && e.reasons.some((r) => r.includes('祿'))) return { cls: 'm4', text: '雙祿' };
   return { cls: 'm1', text: e.marks[0] ?? '引動' };
 }
 

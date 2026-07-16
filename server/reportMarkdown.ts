@@ -155,10 +155,11 @@ function limsMd(book: BookData, ch: unknown): string[] {
   return out;
 }
 
-/** 應期 mk 文案：與 reportTemplate.ts 的 eventMark 同規則（災宮引動→原標、雙忌、其餘取首標） */
+/** 應期 mk 文案：與 reportTemplate.ts 的 eventMark 同規則（災宮引動→原標、雙忌、雙祿、其餘取首標） */
 function eventMarkText(e: BookEvent): string {
   if (e.marks.includes('災宮引動')) return e.marks[0] ?? '災宮引動';
   if (e.weight >= 3 && e.reasons.some((r) => r.includes('忌'))) return '雙忌';
+  if (e.weight >= 3 && e.reasons.some((r) => r.includes('祿'))) return '雙祿';
   return e.marks[0] ?? '引動';
 }
 
