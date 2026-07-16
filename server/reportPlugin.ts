@@ -53,6 +53,8 @@ interface StatusFile {
   done: number;
   total: number;
   error?: string;
+  /** 目前章逾時自動重試中；章節成功寫下一筆 status 時自然清除 */
+  retrying?: boolean;
   updatedAt: string;
 }
 
@@ -187,12 +189,17 @@ export function deletePartial(key: string): void {
 }
 
 /** 逾時自動重試一次：opus 單章偶爾超過單次上限，重試可救回，免得整本重跑（其他錯誤照舊直接拋） */
-export async function retryOnTimeout(call: () => Promise<string>, label: string): Promise<string> {
+export async function retryOnTimeout(
+  call: () => Promise<string>,
+  label: string,
+  onRetry?: () => void,
+): Promise<string> {
   try {
     return await call();
   } catch (e) {
     if (!(e instanceof AiTimeoutError)) throw e;
     console.error(`[report] ${label} ${e.message}，重試一次`);
+    onRetry?.(); // 通知前端：此章逾時重試中（寫進 status.json 的 retrying 旗標）
     return await call();
   }
 }
@@ -212,7 +219,11 @@ async function runGenerateJob(key: string, body: GenerateBody): Promise<void> {
       let text = resumable[chapter.key];
       if (text === undefined) {
         const started = Date.now();
-        text = await retryOnTimeout(() => callAi(provider, model, chapter.prompt), `${key} ${chapter.title}`);
+        text = await retryOnTimeout(
+          () => callAi(provider, model, chapter.prompt),
+          `${key} ${chapter.title}`,
+          () => writeStatus(key, { status: 'running', done: outputs.length, total, retrying: true }),
+        );
         console.log(`[report] ${key} ${chapter.title} 完成（${Math.round((Date.now() - started) / 1000)} 秒）`);
         savePartialChapter(key, provider, model, chapter.key, promptHash(chapter.prompt), text);
       }
