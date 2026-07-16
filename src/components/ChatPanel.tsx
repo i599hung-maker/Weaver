@@ -335,7 +335,7 @@ export default function ChatPanel({ mingzhu, result, activeConvId, onSelectConv,
       <div className="chat-col">
         {chatHead}
         <ProfileCard mingzhu={mingzhu} onUpdate={onUpdate} />
-        <ReportsCard mingzhu={mingzhu} onUpdate={onUpdate} />
+        <ReportsCard mingzhu={mingzhu} result={result} onUpdate={onUpdate} />
         <div className="conv-home">
           <div className="conv-list">
             {mingzhu.conversations.length > 0 ? (
