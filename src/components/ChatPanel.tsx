@@ -24,6 +24,8 @@ interface Props {
   mingzhu: Mingzhu;
   result: CastResult;
   activeConvId: string | null;
+  chartTab: 'chart' | 'yingqi';
+  onChartTab: (t: 'chart' | 'yingqi') => void;
   onSelectConv: (id: string | null) => void;
   onUpdate: (m: Mingzhu) => void;
 }
@@ -156,7 +158,7 @@ function AskBox({
   );
 }
 
-export default function ChatPanel({ mingzhu, result, activeConvId, onSelectConv, onUpdate }: Props) {
+export default function ChatPanel({ mingzhu, result, activeConvId, chartTab, onChartTab, onSelectConv, onUpdate }: Props) {
   const analysis = useMemo(() => buildAnalysis(result), [result]);
   const [input, setInput] = useState('');
   const [mode, setMode] = useState<Mode>('chat');
@@ -326,6 +328,14 @@ export default function ChatPanel({ mingzhu, result, activeConvId, onSelectConv,
       <span>
         {mingzhu.birth.date} {mingzhu.birth.time}
       </span>
+      <div className="ch-tabs">
+        <button className={chartTab === 'chart' ? 'active' : ''} onClick={() => onChartTab('chart')}>
+          命盤
+        </button>
+        <button className={chartTab === 'yingqi' ? 'active' : ''} onClick={() => onChartTab('yingqi')}>
+          斷應期
+        </button>
+      </div>
     </div>
   );
 

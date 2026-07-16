@@ -1298,43 +1298,8 @@ footer {
   padding: 0 14px 40px;
 }
 
-/* 右欄置頂頁籤列：命盤｜斷應期＋右側命書鈕 */
-.rp-tabs {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  height: var(--headbar-h);
-  margin: 0 -14px 12px;
-  padding: 0 14px;
-  background: var(--glass-bar); /* 同欄身視覺色；sticky 蓋過捲動內容 */
-  backdrop-filter: blur(8px);
-  border-bottom: 1px solid transparent; /* 隱藏但保留佔位，高度對齊不變 */
-}
-
-.rp-tabs > button {
-  padding: 6px 18px;
-  font-size: 14px;
-}
-
-.rp-tabs > button.active {
-  border-color: var(--border);
-  color: var(--text);
-  background: var(--bg-active);
-}
-
-.rp-tabs-right {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.rp-tabs-right .primary {
-  padding: 6px 12px;
-  font-size: 12.5px;
+.right-panel > :first-child {
+  margin-top: 12px; /* 拆掉頂列後，命盤與欄頂留白 */
 }
 
 .rc-sub {
@@ -2037,4 +2002,90 @@ footer {
   font-size: 14.5px;
   color: var(--text);
   line-height: 1.8;
+}
+
+/* 中欄頂端：命盤／斷應期 切換（控制右欄內容） */
+.ch-tabs {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+}
+.ch-tabs button {
+  padding: 5px 14px;
+  font-size: 13px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: none;
+  color: var(--text-2);
+  cursor: pointer;
+}
+.ch-tabs button.active {
+  border-color: var(--border);
+  color: var(--text);
+  background: var(--bg-active);
+}
+
+/* 報告書：產生完整命書大按鈕 */
+.book-gen-big {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 100%;
+  padding: 22px 12px;
+  margin: 2px 0 4px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-hover);
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.book-gen-big:hover {
+  border-color: var(--text-3);
+  background: var(--bg-active);
+}
+.book-gen-big small {
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--text-3);
+}
+
+/* 報告書：生成中九章輪播 */
+.book-gen {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 12px;
+  margin: 2px 0 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-hover);
+}
+.bg-prog {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+.bg-line {
+  font-size: 13.5px;
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 1.6em;
+}
+.bg-line.blink {
+  animation: bgBreathe 1.8s ease-in-out infinite;
+}
+@keyframes bgBreathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
 }
