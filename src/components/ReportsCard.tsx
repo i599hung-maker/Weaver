@@ -159,7 +159,9 @@ export default function ReportsCard({ mingzhu, result, onUpdate }: Props) {
     }
   };
 
-  const bookStatus: BookStatusInfo = { done: rs?.status === 'done', updatedAt: rs?.updatedAt };
+  // book.done 只用來推導「舊制命書（key＝命主 id）」那一列；bookKey 落回 mingzhu.id 時才成立。
+  // 若 bookKey 是新制 b_ key，命書已在 reports 有 ReportMeta，不需推導，否則會生出開不了(404)的幽靈列。
+  const bookStatus: BookStatusInfo = { done: rs?.status === 'done' && bookKey === mingzhu.id, updatedAt: rs?.updatedAt };
   const list = mergeReports(mingzhu, bookStatus);
 
   const exportReport = async (r: ReportMeta, format: 'jpg' | 'pdf' | 'md') => {
