@@ -1,6 +1,23 @@
 import { describe, expect, it } from 'vitest';
-import { CLAUDE_API_MODELS, ANTIGRAVITY_MODELS, callAi } from '../aiCall.js';
+import { CLAUDE_API_MODELS, ANTIGRAVITY_MODELS, callAi, isUsageLimitMessage } from '../aiCall.js';
 import { AI_PROVIDERS } from '../../src/ai/providers';
+
+describe('isUsageLimitMessage', () => {
+  it('CLI 印出的用量上限訊息要被攔截，不能當章節內容', () => {
+    expect(isUsageLimitMessage("You've hit your limit · resets 7:50pm (Asia/Taipei)")).toBe(true);
+    expect(isUsageLimitMessage("You've reached your usage limit.")).toBe(true);
+    expect(isUsageLimitMessage('Claude usage limit reached|1752404400')).toBe(true);
+  });
+
+  it('正常章節輸出不誤判', () => {
+    expect(isUsageLimitMessage('{"epithet":"執樞","seal":"府相朝垣"}')).toBe(false);
+    expect(isUsageLimitMessage('本命盤紫微獨坐命宮，格局清貴。')).toBe(false);
+  });
+
+  it('長文中剛好引用到 limit 字眼不誤判（上限訊息必是短輸出）', () => {
+    expect(isUsageLimitMessage(`長篇章節內容。${'內文。'.repeat(100)}如 You've hit your limit 這句話只是引用。`)).toBe(false);
+  });
+});
 
 describe('callAi', () => {
   it('未知供應商 throw 尚未支援', async () => {

@@ -64,6 +64,7 @@ const book: BookData = {
   events: [
     { year: 2023, gz: '癸卯', age: 30, isCurrent: false, isPast: true, marks: ['災宮引動'], weight: 2, reasons: ['流年命宮走到大限疾厄'] },
     { year: 2026, gz: '丙午', age: 33, isCurrent: true, isPast: false, marks: ['流命引動'], weight: 2, reasons: ['流年命宮走到大限夫妻'] },
+    { year: 2033, gz: '癸丑', age: 40, isCurrent: false, isPast: false, marks: ['同星相疊'], weight: 3, reasons: ['流年廉貞祿與生年祿同星相疊'] },
   ],
   topicLocs: {
     benming: '命宮 · 甲戌 · 廉貞(利)化祿 天府(廟)',
@@ -103,6 +104,7 @@ function buildChapters(): Record<string, unknown> {
       events: [
         { year: 2023, title: '災宮踩在忌星上', desc: '健康警訊。', why: '流年命宮疊大限疾厄。', advice: '有身體狀況就是此應。' },
         { year: 2026, title: '今年：感情定奪年', desc: '感情議題正面引動。', why: '流年命宮走到大限夫妻。', advice: '感情大事可以定。' },
+        { year: 2033, title: '雙祿進財年', desc: '正財偏財同動。', why: '流年廉貞祿疊生年祿，雙祿為吉應。', advice: '擴張置產好時機。' },
       ],
     },
     compass: {
@@ -153,6 +155,7 @@ describe('renderBookMarkdown', () => {
     expect(md).toContain('## 重點應期');
     expect(md).toContain('#### 2023 癸卯 · 30歲（災宮引動）災宮踩在忌星上');
     expect(md).toContain('#### 2026 丙午 · 33歲 · 今年（流命引動）今年：感情定奪年');
+    expect(md).toContain('#### 2033 癸丑 · 40歲（雙祿）雙祿進財年'); // 權重3＋祿 → 雙祿標記
     expect(md).toContain('- 為什麼：流年命宮疊大限疾厄。');
     expect(md).toContain('- 驗證點：有身體狀況就是此應。'); // 過去年份為驗證點
     expect(md).toContain('- 建議：感情大事可以定。');

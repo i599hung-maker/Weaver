@@ -113,7 +113,7 @@ function buildLuopanPrompt(analysis: ChartAnalysis, currentYear: number): string
 【四主題三方四正】
 ${topicsDesc}
 
-【斷應期規則引擎結果（占驗派流命引動法＋疊星引動法，程式計算，勿自行增減）】
+【斷應期規則引擎結果（占驗派流命引動法＋疊星引動法，程式計算，勿自行增減；雙祿（祿疊祿、雙祿交會）為吉應、雙忌為凶應、祿忌交會吉中藏凶）】
 ${decadalDesc}
 
 【撰寫要求】

@@ -36,6 +36,7 @@ npm run build    # dist/ 靜態網站（純排盤，不含 AI 後端）
 - key 規則：命書 `b_`＋時間36進位、單題 `q_`＋同法、舊制命書 key＝命主 id（相容邏輯在 `src/store/reportList.ts` 的 `mergeReports`）
 - 每次產生新增一版不覆蓋；`ReportMeta`（`src/store/mingzhu.ts`）記 provider/model，清單與報告頁尾顯示模型標記
 - 生成 job 是 dev server in-memory（`jobs` Set）：**重啟 dev server 會讓生成中斷**
+- 章節續跑：每章完成即寫 `data/reports/<key>.chapters.json`；中斷（逾時／CLI 錯誤／重啟）後前端沿用原 key 重新產生，provider/model/prompt hash 都相同的章節直接沿用，全書完成即刪 partial 檔。完成後的「重新產生」用新 key，不會誤沿用
 
 ### 資料存放
 

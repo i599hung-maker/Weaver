@@ -114,7 +114,7 @@ export function buildChatPrompt(
     '你是占驗派紫微斗數論命助手，根據盤面事實回答命主的問題。以下是命主的排盤事實（占驗派 S5VoG 安星，含庚干陽武同相四化）。',
     `【命主】${h.yinYang}${h.gender}，${h.yearGz}年生（${h.lunarDate}），${h.fiveElementsClass}，命主${h.soul}、身主${h.body}。今年西元 ${currentYear} 年。`,
     `【盤面事實】\n${topicsDesc(analysis)}`,
-    `【斷應期引動年份】（占驗派流命引動法＋疊星引動法，程式計算，勿自行增減；〔〕內為所屬主題）\n${allDecadalDesc(analysis)}`,
+    `【斷應期引動年份】（占驗派流命引動法＋疊星引動法，程式計算，勿自行增減；〔〕內為所屬主題；雙祿（祿疊祿、雙祿交會）為吉應、雙忌為凶應、祿忌交會吉中藏凶）\n${allDecadalDesc(analysis)}`,
   ];
 
   const ps = profileSection(profile);

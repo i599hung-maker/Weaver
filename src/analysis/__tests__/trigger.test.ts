@@ -39,6 +39,12 @@ describe('定盤一斷應期', () => {
     expect(jiHits.some((h) => h.reason.includes('廉貞') && h.reason.includes('生年忌'))).toBe(true);
   });
 
+  it('同星相疊：2026 丙戌年流年天同祿疊生年天同祿（祿疊祿，權重3）', () => {
+    const luHits = jiawu.hits.filter((h) => h.year === 2026 && h.method === '同星相疊' && h.reason.includes('天同'));
+    expect(luHits.length).toBeGreaterThan(0);
+    expect(luHits.every((h) => h.weight === 3)).toBe(true);
+  });
+
   it('大限備註：甲限廉貞化祿與生年廉貞化忌同星', () => {
     expect(jiawu.notes.some((n) => n.includes('廉貞') && n.includes('同星'))).toBe(true);
   });

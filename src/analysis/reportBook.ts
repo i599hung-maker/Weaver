@@ -86,15 +86,18 @@ function natalMutText(yearStem: string): string {
 
 /** 年齡級距（虛歲）：過往池回看年數與筆數上限 */
 function pastQuota(age: number): { lookback: number; max: number } {
-  if (age < 35) return { lookback: 8, max: 4 };
-  if (age <= 55) return { lookback: 15, max: 6 };
-  return { lookback: 25, max: 8 };
+  if (age < 35) return { lookback: 8, max: 6 };
+  if (age <= 55) return { lookback: 15, max: 9 };
+  return { lookback: 25, max: 12 };
 }
+
+/** 未來池筆數上限 */
+const FUTURE_MAX = 12;
 
 /**
  * 重點應期拆兩池（年份升冪合併輸出）：
  * - 過往對答案：回看範圍與筆數隨虛歲級距，權重優先、同權取較近年，且虛歲不早於 15
- * - 未來引動：今年~+22 年權重前 8，今年命中必收
+ * - 未來引動：今年~+22 年權重前 12，今年命中必收
  */
 export function selectKeyEvents(analysis: ChartAnalysis, currentYear: number, birthYear: number): BookEvent[] {
   const quota = pastQuota(currentYear - birthYear + 1);
@@ -128,9 +131,9 @@ export function selectKeyEvents(analysis: ChartAnalysis, currentYear: number, bi
     .sort((a, b) => b.weight - a.weight || b.year - a.year)
     .slice(0, quota.max);
   const futureAll = all.filter((e) => !e.isPast).sort((a, b) => b.weight - a.weight || a.year - b.year);
-  let future = futureAll.slice(0, 8);
+  let future = futureAll.slice(0, FUTURE_MAX);
   const cur = futureAll.find((e) => e.isCurrent);
-  if (cur && !future.includes(cur)) future = [...future.slice(0, 7), cur];
+  if (cur && !future.includes(cur)) future = [...future.slice(0, FUTURE_MAX - 1), cur];
   return [...past, ...future].sort((a, b) => a.year - b.year);
 }
 
@@ -319,7 +322,7 @@ function eventsPrompt(analysis: ChartAnalysis, book: BookData, currentYear: numb
   const past = book.events.filter((e) => e.isPast);
   const future = book.events.filter((e) => !e.isPast);
   const allYears = book.events.map((e) => e.year).join('、');
-  return `你是占驗派紫微斗數論命助手。以下是規則引擎推算的重點應期年份與原因（占驗派流命引動法＋疊星引動法，程式計算，勿自行增減），請為視覺化命書的「重點應期」時間軸產生每年的解讀。時間軸分兩段：過往年份用來對答案驗盤，未來年份給建議。
+  return `你是占驗派紫微斗數論命助手。以下是規則引擎推算的重點應期年份與原因（占驗派流命引動法＋疊星引動法，程式計算，勿自行增減），請為視覺化命書的「重點應期」時間軸產生每年的解讀。時間軸分兩段：過往年份用來對答案驗盤，未來年份給建議。疊星吉凶：雙祿（祿疊祿、雙祿交會）為吉應（進財、升遷、喜事類），雙忌為凶應（破財、災咎類），祿忌交會吉中藏凶；解讀方向須順著該年引動的吉凶寫，吉年寫把握點、凶年寫防範點。
 
 【命主】${headerDesc(analysis)}。今年西元 ${currentYear} 年。${book.meta.natalMutText}。
 
@@ -377,5 +380,136 @@ export function buildBookChapters(analysis: ChartAnalysis, book: BookData, curre
     { key: 'lims', title: '大限走勢', prompt: withProfile(limsPrompt(analysis, book, currentYear)) },
     { key: 'events', title: '重點應期', prompt: withProfile(eventsPrompt(analysis, book, currentYear)) },
     { key: 'compass', title: '人生羅盤', prompt: withProfile(compassPrompt(analysis, book, currentYear)) },
+  ];
+}
+
+/* ---------- 九章輪播步驟（純前端狀態文案；資料全來自 book/analysis） ---------- */
+
+export interface BookStep {
+  key: string;
+  title: string;
+  /** 逐句輪播；最後一句固定「撰寫…／收卷…」讓輪播停住慢閃 */
+  steps: string[];
+}
+
+/** 命主標頭：《陽男，丙子年生，水二局，命主廉貞、身主火星》 */
+function headerBrief(analysis: ChartAnalysis): string {
+  const h = analysis.header;
+  return `《${h.yinYang}${h.gender}，${h.yearGz}年生，${h.fiveElementsClass}，命主${h.soul}、身主${h.body}》`;
+}
+
+/** 本宮主星清單：《紫微(旺)、貪狼(廟)》，無主星則借對宮 */
+function starList(stars: { name: string; brightness?: string }[]): string {
+  if (stars.length === 0) return '無主星（借對宮）';
+  return `《${stars.map((s) => `${s.name}${s.brightness ? `(${s.brightness})` : ''}`).join('、')}》`;
+}
+
+/** 三方四正一句：對宮《遷移(酉)》、三合《財帛(亥)・官祿(未)》 */
+function sanfangLine(t: { group: { palaceName: string; branch: string }[] }): string {
+  const [, dui, s1, s2] = t.group;
+  return `展開三方四正：對宮《${dui.palaceName}(${dui.branch})》、三合《${s1.palaceName}(${s1.branch})・${s2.palaceName}(${s2.branch})》`;
+}
+
+function topicOf(analysis: ChartAnalysis, topic: Topic) {
+  return analysis.topics.find((x) => x.topic === topic)!;
+}
+
+/** 由 book/analysis 現成資料組九章輪播文案（與 buildBookChapters 同順序同 key） */
+export function buildBookSteps(analysis: ChartAnalysis, book: BookData): BookStep[] {
+  const mut = book.meta.natalMutText;
+  const cur = book.decadals[0];
+  const shen = book.cells.find((c) => c.isShen);
+
+  const benming = topicOf(analysis, '本命');
+  const ming = benming.group[0];
+  const shiye = topicOf(analysis, '事業');
+  const caiyun = topicOf(analysis, '財運');
+  const aiqing = topicOf(analysis, '愛情');
+
+  const fourLocs = analysis.topics.map((t) => `${t.palaceName}(${t.branch})`).join('、');
+  const future = book.events.filter((e) => !e.isPast);
+  const past = book.events.filter((e) => e.isPast).map((e) => e.year);
+  const heavy = [...book.events].sort((a, b) => b.weight - a.weight)[0];
+
+  const hero: string[] = [
+    `正在定盤：${headerBrief(analysis)}`,
+    `正在讀命宮（《${ming.branch}》）：${starList(ming.stars)}坐守`,
+    sanfangLine(benming),
+    `檢視生年四化：《${mut}》`,
+    cur ? `定位現行大限：《${cur.range[0]}~${cur.range[1]}歲，走本命${cur.palaceName}宮》` : '定位現行大限…',
+    '凝鍊命格雅號與格局印…',
+  ];
+
+  const gift: string[] = [
+    `正在讀四主題宮位：${fourLocs}`,
+    shen ? `查身宮落點：《身宮在${shen.palaceName}(${shen.branch})》` : '查身宮落點…',
+    '逐宮比對星曜亮度，分揀優勢與弱項…',
+    '歸納天賦類型、閃光點與練習方法…',
+  ];
+
+  const personality: string[] = [
+    `正在讀命宮（《${ming.branch}》）：${starList(ming.stars)}坐守`,
+    sanfangLine(benming),
+    '檢視生年四化與亮度，判讀性格明暗兩面…',
+    '撰寫性格論斷…',
+  ];
+
+  const career: string[] = [
+    `正在讀官祿宮（《${shiye.group[0].branch}》）：${starList(shiye.group[0].stars)}坐守`,
+    sanfangLine(shiye),
+    `檢視生年四化：《${mut}》`,
+    '綜合格局與亮度，撰寫事業論斷…',
+  ];
+
+  const money: string[] = [
+    `正在讀財帛宮（《${caiyun.group[0].branch}》）：${starList(caiyun.group[0].stars)}坐守`,
+    sanfangLine(caiyun),
+    `檢視生年四化：《${mut}》`,
+    '判讀財源型態與守財漏財點…',
+  ];
+
+  const love: string[] = [
+    `正在讀夫妻宮（《${aiqing.group[0].branch}》）：${starList(aiqing.group[0].stars)}坐守`,
+    sanfangLine(aiqing),
+    cur
+      ? `判斷現行大限：《${cur.palaceName === '夫妻' ? '走本命夫妻宮，感情正是這十年主題' : `走本命${cur.palaceName}宮，未親臨夫妻宮`}》`
+      : '判斷現行大限…',
+    '撰寫感情緣分與相處功課…',
+  ];
+
+  const lims: string[] = [
+    ...book.decadals.map(
+      (d) => `正在推演《${d.range[0]}~${d.range[1]}歲 ${d.gz}》限：大限命宮走本命《${d.palaceName}》宮`,
+    ),
+    ...(future[0] ? [`流命引動掃描：《${future[0].year} ${future[0].gz}年，${future[0].marks.join('、')}》`] : []),
+    ...(heavy ? [`疊星引動：《${heavy.year} ${heavy.gz}年（總權重${heavy.weight}）》`] : []),
+    `彙整《${book.decadals.length}》張大限卡主題…`,
+  ];
+
+  const events: string[] = [
+    past.length ? `核對過往應期（對答案）：《${past.join('、')}》` : '核對過往應期（對答案）…',
+    ...(future[0] ? [`流命引動：《${future[0].year} ${future[0].gz}年，${future[0].marks.join('、')}》`] : []),
+    ...(heavy ? [`疊星判斷：《${heavy.year} ${heavy.gz}年，${heavy.marks.join('、')}（總權重${heavy.weight}）》`] : []),
+    `吉凶定調：共 ${book.events.length} 個應期年份，逐年判吉凶…`,
+    '逐年撰寫解讀：吉年寫把握點、凶年寫防範點…',
+  ];
+
+  const compass: string[] = [
+    '彙整四主題三方四正與大限走勢…',
+    future.length ? `標記進攻年與防守年：《${future.slice(0, 3).map((e) => e.year).join('、')}…》` : '標記進攻年與防守年…',
+    '整理「路線別走」與改運對策…',
+    '收卷：凝鍊一句話記住這張盤…',
+  ];
+
+  return [
+    { key: 'hero', title: '開卷', steps: hero },
+    { key: 'gift', title: '天賦印象', steps: gift },
+    { key: 'topic_benming', title: '性格', steps: personality },
+    { key: 'topic_shiye', title: '事業', steps: career },
+    { key: 'topic_caiyun', title: '金錢', steps: money },
+    { key: 'topic_aiqing', title: '感情', steps: love },
+    { key: 'lims', title: '大限走勢', steps: lims },
+    { key: 'events', title: '重點應期', steps: events },
+    { key: 'compass', title: '人生羅盤', steps: compass },
   ];
 }

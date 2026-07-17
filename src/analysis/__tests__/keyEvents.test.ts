@@ -26,27 +26,27 @@ function yearsRange(from: number, to: number, birthYear: number, weight = 2): Tr
 }
 
 describe('selectKeyEvents 過往池（年齡級距）', () => {
-  it('<35 歲：回看 8 年、最多 4 筆、同權取較近年', () => {
+  it('<35 歲：回看 8 年、最多 6 筆、同權取較近年', () => {
     const birthYear = 1996; // 虛歲 31
     const events = selectKeyEvents(fakeAnalysis(yearsRange(2000, 2025, birthYear)), CURRENT, birthYear);
     const past = events.filter((e) => e.isPast);
-    // 窗口 2018~2025 全是同權重 → 取較近的 2022~2025 四筆
-    expect(past.map((e) => e.year)).toEqual([2022, 2023, 2024, 2025]);
+    // 窗口 2018~2025 全是同權重 → 取較近的 2020~2025 六筆
+    expect(past.map((e) => e.year)).toEqual([2020, 2021, 2022, 2023, 2024, 2025]);
   });
 
-  it('35~55 歲：回看 15 年、最多 6 筆', () => {
+  it('35~55 歲：回看 15 年、最多 9 筆', () => {
     const birthYear = 1980; // 虛歲 47
     const events = selectKeyEvents(fakeAnalysis(yearsRange(1990, 2025, birthYear)), CURRENT, birthYear);
     const past = events.filter((e) => e.isPast);
-    expect(past).toHaveLength(6);
+    expect(past).toHaveLength(9);
     for (const e of past) expect(e.year).toBeGreaterThanOrEqual(CURRENT - 15);
   });
 
-  it('>55 歲：回看 25 年、最多 8 筆', () => {
+  it('>55 歲：回看 25 年、最多 12 筆', () => {
     const birthYear = 1960; // 虛歲 67
     const events = selectKeyEvents(fakeAnalysis(yearsRange(1980, 2025, birthYear)), CURRENT, birthYear);
     const past = events.filter((e) => e.isPast);
-    expect(past).toHaveLength(8);
+    expect(past).toHaveLength(12);
     for (const e of past) expect(e.year).toBeGreaterThanOrEqual(CURRENT - 25);
   });
 
@@ -94,13 +94,13 @@ describe('selectKeyEvents 過往池（年齡級距）', () => {
 });
 
 describe('selectKeyEvents 未來池', () => {
-  it('今年~+22 年取權重前 8、今年命中必收、不佔過往名額', () => {
+  it('今年~+22 年取權重前 12、今年命中必收、不佔過往名額', () => {
     const birthYear = 1980;
-    // 今年 weight 2；2027~2035 九筆 weight 3 → 前 8 擠掉今年，但今年必收
-    const hits = [hit(CURRENT, birthYear, 2), ...yearsRange(2027, 2035, birthYear, 3)];
+    // 今年 weight 2；2027~2039 十三筆 weight 3 → 前 12 擠掉今年，但今年必收
+    const hits = [hit(CURRENT, birthYear, 2), ...yearsRange(2027, 2039, birthYear, 3)];
     const events = selectKeyEvents(fakeAnalysis(hits), CURRENT, birthYear);
     const future = events.filter((e) => !e.isPast);
-    expect(future).toHaveLength(8);
+    expect(future).toHaveLength(12);
     expect(future.some((e) => e.isCurrent)).toBe(true);
     expect(events.filter((e) => e.isPast)).toHaveLength(0);
   });

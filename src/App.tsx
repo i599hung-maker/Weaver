@@ -72,6 +72,7 @@ export default function App() {
   const [confirmReq, setConfirmReq] = useState<ConfirmRequest | null>(null);
   const [rightOpen, setRightOpen] = useState(false); // <1100px 時右欄開關
   const [rpWidth, setRpWidth] = useState(loadRpWidth);
+  const [chartTab, setChartTab] = useState<'chart' | 'yingqi'>('chart');
 
   useEffect(() => {
     try {
@@ -243,6 +244,8 @@ export default function App() {
             mingzhu={mingzhu}
             result={result}
             activeConvId={activeConvId}
+            chartTab={chartTab}
+            onChartTab={setChartTab}
             onSelectConv={setActiveConvId}
             onUpdate={updateMingzhu}
           />
@@ -264,7 +267,8 @@ export default function App() {
               mingzhu={mingzhu}
               result={result}
               simple={settings.chartMode === 'simple'}
-              onUpdate={updateMingzhu}
+              chartTab={chartTab}
+              onChartTab={setChartTab}
             />
           </div>
         </>

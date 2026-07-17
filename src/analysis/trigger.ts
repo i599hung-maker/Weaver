@@ -59,11 +59,12 @@ function yearGanzhi(year: number, birthYear: number, yearStem: string, yearBranc
   ];
 }
 
-/** 同星相疊／四化交會的權重：忌疊忌 3、含忌 2、其餘 1 */
+/** 同星相疊／四化交會的權重（吉凶對稱）：忌疊忌、祿疊祿 3；含忌或含祿 2；純權科互疊 1 */
 function weightOf(kinds: string[]): number {
   const ji = kinds.filter((k) => k === '忌').length;
-  if (ji >= 2) return 3;
-  if (ji === 1) return 2;
+  const lu = kinds.filter((k) => k === '祿').length;
+  if (ji >= 2 || lu >= 2) return 3;
+  if (ji === 1 || lu === 1) return 2;
   return 1;
 }
 
