@@ -230,7 +230,14 @@ export default function ReportsCard({ mingzhu, result, onUpdate }: Props) {
 
   return (
     <div className="reports-card">
-      <div className="rc-title">報告書</div>
+      <div className="pc-head">
+        <div className="rc-title">報告書</div>
+        {rs?.status === 'done' && (
+          <button className="pc-edit" onClick={() => generate(true)}>
+            重新產生完整命書
+          </button>
+        )}
+      </div>
       {genErr && <div className="rc-err">{genErr}</div>}
 
       {rs?.status === 'none' && (
@@ -298,12 +305,6 @@ export default function ReportsCard({ mingzhu, result, onUpdate }: Props) {
           </div>
         );
       })}
-
-      {rs?.status === 'done' && (
-        <button className="rc-sub" onClick={() => generate(true)}>
-          重新產生完整命書
-        </button>
-      )}
 
       <ConfirmModal req={confirm} onClose={() => setConfirm(null)} />
     </div>
